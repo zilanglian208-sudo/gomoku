@@ -20,6 +20,9 @@
  *   2. 综合点位分：进攻分 + 防守分×防守权重 + 中心偏好。
  *   3. 困难模式：对前 12 个候选点做深度 4 的 negamax 搜索（α-β 剪枝，
  *      节点数上限防卡顿），叶子用全盘滑窗评估，平分时偏向点位分。
+ *   4. 难度自适应（effectiveLevel）：橡皮筋机制——连败 3 局 AI 降一档、
+ *      5 局降两档，连胜 4 局升一档。参数经模拟实验数据驱动标定：
+ *      新手对「棋手」档胜率 0%，对「学徒」档 50%（tools/sim-difficulty.js）。
  *
  * 复杂度：点位评估 O(候选数×4×9)；搜索受节点上限约束，中盘实测 <150ms。
  * 可测试性：setRandom(fn) 可注入伪随机源，使含随机性的对局结果可复现。
@@ -244,6 +247,50 @@
   let rng = Math.random;
   function setRandom(fn) { rng = fn || Math.random; }
 
+  /**
+   * 失误率选点：以 blunder 概率从第 2~4 优候选中加权挑一个，否则选最优。
+   * 这是难度设计的核心机制——AI 的「弱」体现在战略选点上，
+   * 而战术硬规则（能赢必赢、该挡必挡）不受影响，弱得自然不弱得像 bug。
+   * @param {Array} ranked 已按“越靠前越好”排序的候选数组
+   * @param {number} blunder 0~1，失误概率
+   */
+  function pickWithBlunder(ranked, blunder) {
+    if (blunder > 0 && ranked.length > 1 && rng() < blunder) {
+      const alt = ranked.slice(1, Math.min(4, ranked.length));
+      const w = [0.5, 0.3, 0.2];
+      let r = rng(), acc = 0;
+      for (let i = 0; i < alt.length; i++) { acc += w[i]; if (r <= acc) return alt[i]; }
+      return alt[alt.length - 1];
+    }
+    return ranked[0];
+  }
+
+  /**
+   * 难度自适应（橡皮筋机制）：根据玩家近期胜负返回 AI 的有效棋力档。
+   * 数据依据（tools/sim-difficulty.js）：新手对「棋手」档胜率 0%，
+   * 对「学徒」档 50% —— 因此用「降档」而非「加大失误率」做手下留情，
+   * 后者被证明无效（强引擎的次优候选依然是好棋）。
+   *   连败 3 局 → 降一档；连败 5 局 → 降两档；
+   *   连胜 4 局 → 升一档（给赢麻了的玩家加压）。
+   * 升降都在用户选定的档位基础上进行，纯函数，便于单元测试。
+   * @param {string} level 用户选定的档位（'easy'|'medium'|'hard'）
+   * @param {string[]} recent 最近对局结果序列（'w'/'l'/'d'，旧的在前）
+   * @returns {string} 有效档位
+   */
+  function effectiveLevel(level, recent) {
+    const order = ['easy', 'medium', 'hard'];
+    let idx = order.indexOf(level);
+    const tail = (recent || []).slice(-6);
+    let losses = 0;
+    for (let i = tail.length - 1; i >= 0 && tail[i] === 'l'; i--) losses++;
+    if (losses >= 5) idx = Math.max(0, idx - 2);
+    else if (losses >= 3) idx = Math.max(0, idx - 1);
+    let wins = 0;
+    for (let i = tail.length - 1; i >= 0 && tail[i] === 'w'; i--) wins++;
+    if (wins >= 4) idx = Math.min(order.length - 1, idx + 1);
+    return order[idx];
+  }
+
   function bestOf(arr, key) {
     if (!arr.length) return null;
     let b = arr[0];
@@ -255,9 +302,11 @@
    * @param {Int8Array} board
    * @param {number} aiRole  AI 执子（BLACK=1 / WHITE=2）
    * @param {'easy'|'medium'|'hard'} level
+   * @param {object} [opts]  可选参数：{ blunder: 0~1 } 失误率，
+   *                         用于难度自适应（默认 0，行为与旧版一致）
    * @returns {{x:number, y:number}}
    */
-  function bestMove(board, aiRole, level) {
+  function bestMove(board, aiRole, level, opts) {
     const opp = other(aiRole);
     const cands = genMoves(board);
     if (!cands.length) return { x: 7, y: 7 };
@@ -288,10 +337,11 @@
     info.sort((p, q) => q.total - p.total);
 
     if (level === 'hard') {
-      // 深度 4 搜索（根 1 层 + negamax 3 层）
+      // 深度 4 搜索：记录根节点排名，失误率层可从次优中挑选
       nodes = 0;
       const top = info.slice(0, 12);
-      let best = null, bestSc = -Infinity, alpha = -Infinity;
+      const scored = [];
+      let alpha = -Infinity;
       for (const it of top) {
         board[it.c] = aiRole;
         let sc;
@@ -299,20 +349,24 @@
         else sc = -negamax(board, 3, -Infinity, -alpha, opp, 2);
         board[it.c] = EMPTY;
         sc += it.total * 1e-6; // 平分时偏向点位分更高者
-        if (sc > bestSc) { bestSc = sc; best = it; }
+        scored.push({ it, sc });
         if (sc > alpha) alpha = sc;
       }
-      return best;
+      scored.sort((a, b) => b.sc - a.sc);
+      return pickWithBlunder(scored.map(s => s.it), (opts && opts.blunder) || 0);
     }
 
+    // easy / medium：综合评分排序
+    let ranked = info;
     if (level === 'easy' && info.length > 1) {
-      // 入门难度：在前 3 名中加权随机，走子更随性
+      // 入门难度自带 38% 随性（前 3 名加权），把选中者排到最前再过失误率层
       const pool = info.slice(0, Math.min(3, info.length));
       const w = [0.62, 0.25, 0.13];
-      let r = rng(), acc = 0;
-      for (let i = 0; i < pool.length; i++) { acc += w[i]; if (r <= acc) return pool[i]; }
+      let r = rng(), acc = 0, first = pool[pool.length - 1];
+      for (let i = 0; i < pool.length; i++) { acc += w[i]; if (r <= acc) { first = pool[i]; break; } }
+      ranked = [first].concat(info.filter(x => x !== first));
     }
-    return info[0];
+    return pickWithBlunder(ranked, (opts && opts.blunder) || 0);
   }
 
   return {
@@ -320,6 +374,6 @@
     createBoard, idx,
     winLineAt, winAtIdx,
     analyzePoint, genMoves, boardEval,
-    bestMove, setRandom,
+    bestMove, setRandom, effectiveLevel,
   };
 });

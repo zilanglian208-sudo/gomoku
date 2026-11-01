@@ -218,5 +218,40 @@ console.log('\n[7] 残局题库完整性');
   ok(agree === winCount, `hard 引擎在全部 ${winCount} 道「一步制胜」题上均选中答案`);
 }
 
+/* ---------- 8. 难度自适应：橡皮筋降档 ---------- */
+console.log('\n[8] 难度自适应');
+{
+  // a) effectiveLevel 的升降档规则
+  ok(G.effectiveLevel('medium', []) === 'medium', '无近期战绩时等于选定档位');
+  ok(G.effectiveLevel('medium', ['w', 'l', 'l']) === 'medium', '连败 2 局暂不降档');
+  ok(G.effectiveLevel('medium', ['w', 'l', 'l', 'l']) === 'easy', '连败 3 局 → 降一档');
+  ok(G.effectiveLevel('hard', ['l', 'l', 'l', 'l', 'l']) === 'easy', '连败 5 局 → 降两档');
+  ok(G.effectiveLevel('easy', ['l', 'l', 'l', 'l', 'l']) === 'easy', '已是最低档不再下降');
+  ok(G.effectiveLevel('medium', ['w', 'w', 'w', 'w']) === 'hard', '连胜 4 局 → 升一档（加压）');
+  ok(G.effectiveLevel('hard', ['w', 'w', 'w', 'w']) === 'hard', '已是最高档不再上升');
+  ok(G.effectiveLevel('medium', ['l', 'l', 'l', 'w']) === 'medium', '非连败不触发降档');
+
+  // b) 失误率层（引擎能力）：blunder=1 必不选最优（无战术点位的普通局面）
+  const b = G.createBoard();
+  for (const [x, y, r] of [[7, 7, BLACK], [8, 8, WHITE], [6, 8, BLACK]]) b[G.idx(x, y)] = r;
+  let seed = 777;
+  G.setRandom(() => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; });
+  const best = G.bestMove(b, WHITE, 'hard');                       // blunder=0
+  seed = 777;
+  const bl = G.bestMove(b, WHITE, 'hard', { blunder: 1 });         // blunder=1
+  G.setRandom();
+  ok(best.x !== bl.x || best.y !== bl.y, 'blunder=1 时放弃最优选点');
+
+  // c) 战术层不受失误率影响：对手冲四在即，再高的失误率也必须堵
+  const b2 = G.createBoard();
+  for (let x = 5; x <= 8; x++) b2[G.idx(x, 7)] = WHITE;            // 白敞四
+  b2[G.idx(3, 3)] = BLACK; b2[G.idx(4, 4)] = BLACK;
+  let seed2 = 12345;
+  G.setRandom(() => { seed2 = (seed2 * 1664525 + 1013904223) >>> 0; return seed2 / 4294967296; });
+  const block = G.bestMove(b2, BLACK, 'hard', { blunder: 1 });
+  G.setRandom();
+  ok(block.y === 7 && (block.x === 4 || block.x === 9), 'blunder=1 仍会堵冲四（战术层免疫）');
+}
+
 console.log(fails ? `\n共 ${fails} 项失败 ❌` : '\n全部测试通过 ✅');
 process.exit(fails ? 1 : 0);

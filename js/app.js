@@ -242,7 +242,11 @@
     aiThinking = true; updatePanel(); render();
     setTimeout(function () {
       const t0 = performance.now();
-      const mv = G.bestMove(board, aiColor, $('difficulty').value);
+      const level = $('difficulty').value;
+      // 难度自适应（橡皮筋）：连败 3 局 AI 降一档、5 局降两档，连胜 4 局升一档。
+      // 数据依据见 README「难度自适应」：新手对棋手档胜率 0%，对学徒档 50%。
+      const effLevel = G.effectiveLevel(level, store.get('wuziqi-recent', []));
+      const mv = G.bestMove(board, aiColor, effLevel);
       aiThinkMs = performance.now() - t0;
       if (token !== gameToken) return;
       aiThinking = false;
@@ -256,6 +260,14 @@
       else if (a.score >= 50000) aiSay(pick(LINES.aiThree));
       doMove(mv.x, mv.y, aiColor);
     }, 160);
+  }
+
+  // 记录对局结果到滚动窗口（橡皮筋机制的数据来源），终局时调用
+  function recordResult(winnerRole) {
+    if (winnerRole === 0) return;                        // 和棋不影响手感
+    const recent = store.get('wuziqi-recent', []);
+    recent.push(winnerRole === playerColor ? 'w' : 'l');
+    store.set('wuziqi-recent', recent.slice(-6));        // 只留最近 6 局
   }
 
   function endGame(winnerRole) {
@@ -293,6 +305,7 @@
     resultSub.textContent = sub + ' · ' + pick(FLAVOR[key]);
     if (key === 'draw') sndDraw(); else if (key === 'aiLose') sndWin(); else sndLose();
     aiSay(pick(LINES[key]));
+    recordResult(winnerRole);
     persist();
     setTimeout(function () { overlay.classList.add('show'); ensureLoop(); }, 500);
     updatePanel();
