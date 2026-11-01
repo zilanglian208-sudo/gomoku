@@ -165,5 +165,58 @@ console.log('\n[6] 困难模式性能');
   ok(dt < 2000, `中盘思考耗时 ${dt}ms < 2000ms (落子 ${mv.x},${mv.y})`);
 }
 
+/* ---------- 7. 残局题库完整性（puzzles.js 由生成器产出） ---------- */
+console.log('\n[7] 残局题库完整性');
+{
+  const PUZZLES = require('./puzzles.js');
+  ok(PUZZLES.length >= 20, `题量充足：${PUZZLES.length} 题`);
+
+  // 逐题验证：杀点唯一且与答案一致、对方无杀、win 型走答案后确实连五
+  let bad = 0;
+  for (const p of PUZZLES) {
+    const b = G.createBoard();
+    for (const [x, y, r] of p.stones) b[G.idx(x, y)] = r;
+    const role = p.type === 'win' ? BLACK : WHITE;
+    const pts = [];
+    for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
+      const i = G.idx(x, y);
+      if (b[i] !== EMPTY) continue;
+      b[i] = role;
+      if (G.winLineAt(b, x, y)) pts.push([x, y]);
+      b[i] = EMPTY;
+    }
+    if (pts.length !== 1 || pts[0][0] !== p.answer[0] || pts[0][1] !== p.answer[1]) { bad++; continue; }
+    // 对方不得已存在杀点，否则题目不干净
+    const foe = 3 - role;
+    let foeWins = false;
+    for (let y = 0; y < SIZE && !foeWins; y++) for (let x = 0; x < SIZE; x++) {
+      const i = G.idx(x, y);
+      if (b[i] !== EMPTY) continue;
+      b[i] = foe;
+      if (G.winLineAt(b, x, y)) { foeWins = true; }
+      b[i] = EMPTY;
+      if (foeWins) break;
+    }
+    if (foeWins) { bad++; continue; }
+    if (p.type === 'win') {
+      b[G.idx(p.answer[0], p.answer[1])] = BLACK;
+      if (!G.winLineAt(b, p.answer[0], p.answer[1])) bad++;
+    }
+  }
+  ok(bad === 0, `全部题目答案唯一且有效（异常 ${bad} 题）`);
+
+  // AI 自检：把答案点喂给引擎评估，答案点必须是评估分最高的点之一
+  let agree = 0;
+  for (const p of PUZZLES) {
+    if (p.type !== 'win') continue;
+    const b = G.createBoard();
+    for (const [x, y, r] of p.stones) b[G.idx(x, y)] = r;
+    const mv = G.bestMove(b, BLACK, 'hard');
+    if (mv.x === p.answer[0] && mv.y === p.answer[1]) agree++;
+  }
+  const winCount = PUZZLES.filter(p => p.type === 'win').length;
+  ok(agree === winCount, `hard 引擎在全部 ${winCount} 道「一步制胜」题上均选中答案`);
+}
+
 console.log(fails ? `\n共 ${fails} 项失败 ❌` : '\n全部测试通过 ✅');
 process.exit(fails ? 1 : 0);

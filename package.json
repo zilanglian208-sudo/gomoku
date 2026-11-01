@@ -1,0 +1,26 @@
+{
+  "name": "gomoku-renju",
+  "version": "4.0.0",
+  "description": "纯前端五子棋：模式识别 + α-β 剪枝 AI，段位/金币/残局挑战/成就系统，零运行时依赖",
+  "main": "game.js",
+  "scripts": {
+    "test": "node test.js",
+    "gen:puzzles": "node tools/gen-puzzles.js",
+    "dev": "node tools/dev-server.js"
+  },
+  "keywords": [
+    "gomoku",
+    "renju",
+    "five-in-a-row",
+    "alpha-beta-pruning",
+    "canvas",
+    "game-ai",
+    "vanilla-js"
+  ],
+  "author": "zilanglian208-sudo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zilanglian208-sudo/gomoku.git"
+  }
+}

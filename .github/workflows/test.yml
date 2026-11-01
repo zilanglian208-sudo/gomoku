@@ -1,0 +1,27 @@
+# CI：每次 push 与 PR 运行全量单元测试（含残局题库交叉验证）
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 使用 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 运行单元测试（无需安装依赖）
+        run: node test.js
+
+      - name: 验证残局题库可重新生成且稳定
+        run: |
+          node tools/gen-puzzles.js
+          node test.js
