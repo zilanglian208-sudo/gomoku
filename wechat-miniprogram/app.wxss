@@ -1,0 +1,8 @@
+/* 全局样式：深色游戏主题 */
+page {
+  background: radial-gradient(1100px 700px at 15% -10%, #2b3049 0%, #171a28 55%, #101220 100%);
+  color: #e8e6df;
+  font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-size: 28rpx;
+  min-height: 100vh;
+}

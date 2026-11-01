@@ -1,0 +1,71 @@
+<view class="page">
+  <view class="board-card">
+    <canvas type="2d" id="board" class="board"
+            style="width:{{boardPx}}px;height:{{boardPx}}px"
+            bindtouchend="onBoardTap"></canvas>
+    <view class="overlay {{showOver ? 'show' : ''}}">
+      <view class="confetti-box">
+        <view wx:for="{{confetti}}" wx:key="index" class="confetti" style="{{item}}"></view>
+      </view>
+      <view class="result">{{resultText}}</view>
+      <view class="result-sub">{{resultSub}}</view>
+      <button class="btn primary again" bindtap="onNewGame">再来一局</button>
+    </view>
+  </view>
+
+  <view class="panel">
+    <view class="card">
+      <view class="turn-row">
+        <view class="stone-dot {{turnBlack ? 'black' : 'white'}} {{thinking ? 'breath' : ''}}"></view>
+        <view class="flex-1">
+          <view class="status">{{statusText}}</view>
+          <view class="sub">{{subStatus}}</view>
+          <view class="time-row">{{timeText}}</view>
+          <view class="bubble {{bubbleShow ? 'show' : ''}}">💬 {{bubble}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">对局设置</view>
+      <picker mode="selector" range="{{diffNames}}" value="{{diffIndex}}" bindchange="onDifficulty">
+        <view class="field">
+          <view class="lbl">AI 难度</view>
+          <view class="picker-val">{{diffNames[diffIndex]}} ▾</view>
+        </view>
+      </picker>
+      <picker mode="selector" range="{{firstNames}}" value="{{firstIndex}}" bindchange="onFirst">
+        <view class="field">
+          <view class="lbl">先手方（更改立即开新局）</view>
+          <view class="picker-val">{{firstNames[firstIndex]}} ▾</view>
+        </view>
+      </picker>
+      <view class="btn-row">
+        <button class="btn primary" bindtap="onNewGame">新对局</button>
+        <button class="btn" bindtap="onUndo" disabled="{{!canUndo}}">悔棋</button>
+        <button class="btn" bindtap="onHint" disabled="{{!canHint}}">提示</button>
+        <button class="btn" bindtap="onToggleSound">{{soundOn ? '🔊 音效' : '🔇 静音'}}</button>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">战绩</view>
+      <view class="score-row">
+        <view class="score"><view class="num">{{scoreP}}</view><view class="lbl">玩家胜</view></view>
+        <view class="vs">VS</view>
+        <view class="score"><view class="num">{{scoreA}}</view><view class="lbl">AI 胜</view></view>
+        <view class="score"><view class="num">{{scoreD}}</view><view class="lbl">平局</view></view>
+      </view>
+      <view class="streak" wx:if="{{streak >= 2}}">🔥 连胜 {{streak}} 场</view>
+      <view class="link" bindtap="onResetScore">清零战绩</view>
+    </view>
+
+    <view class="card help">
+      <view class="card-title">玩法说明</view>
+      <view>黑白轮流落子，横、竖、斜任一方向先连成五子者获胜。</view>
+      <view>· 悔棋：撤回你与 AI 的最后一回合</view>
+      <view>· 提示：让引擎为当前局面推荐一手</view>
+      <view>· AI：模式识别 + α-β 深度搜索，能赢必赢、该挡必挡</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "智能五子棋",
+    "navigationBarBackgroundColor": "#171a28",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#171a28",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
