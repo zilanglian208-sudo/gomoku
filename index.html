@@ -7,14 +7,14 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='11' cy='11' r='8' fill='%23111'/%3E%3Ccircle cx='21' cy='21' r='8' fill='%23fff' stroke='%23999'/%3E%3C/svg%3E">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { user-select: none; -webkit-user-select: none; }
-  :focus { outline: none; }
-  :focus-visible { outline: 2px solid #ecb554; outline-offset: 2px; }
   body {
     font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
     background: radial-gradient(1100px 700px at 15% -10%, #2b3049 0%, #171a28 55%, #101220 100%);
     color: #e8e6df; min-height: 100vh;
+    user-select: none; -webkit-user-select: none;
   }
+  :focus { outline: none; }
+  :focus-visible { outline: 2px solid #ecb554; outline-offset: 2px; }
   header { text-align: center; padding: 22px 16px 6px; }
   header h1 { font-size: 26px; font-weight: 600; letter-spacing: 10px; text-indent: 10px; }
   header p { margin-top: 6px; font-size: 12.5px; color: #9aa0b4; letter-spacing: 2px; }
@@ -30,13 +30,28 @@
   }
   canvas { display: block; width: 100%; max-width: 640px; border-radius: 8px; cursor: pointer; touch-action: manipulation; }
   .overlay {
-    position: absolute; inset: 14px; border-radius: 8px;
+    position: absolute; inset: 14px; border-radius: 8px; overflow: hidden;
     background: rgba(12,14,22,.72); backdrop-filter: blur(3px);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
     opacity: 0; pointer-events: none; transition: opacity .35s;
   }
   .overlay.show { opacity: 1; pointer-events: auto; }
-  .overlay .result { font-size: 30px; font-weight: 700; letter-spacing: 4px; text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+  #confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .confetti {
+    position: absolute; top: -18px; width: 9px; height: 14px; opacity: .95; border-radius: 2px;
+    animation: cfall linear forwards;
+  }
+  @keyframes cfall { to { transform: translateY(740px) rotate(680deg); } }
+  .overlay .result {
+    font-size: 30px; font-weight: 700; letter-spacing: 4px;
+    text-shadow: 0 2px 12px rgba(0,0,0,.6);
+  }
+  .overlay.show .result { animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop {
+    0% { transform: scale(.35); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  #resultSub { font-size: 13.5px; color: #b9bfd4; letter-spacing: 1px; }
   .panel { width: 300px; display: flex; flex-direction: column; gap: 14px; }
   .card {
     background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
@@ -47,17 +62,27 @@
   .stone-dot { width: 22px; height: 22px; border-radius: 50%; flex: none; box-shadow: 0 2px 5px rgba(0,0,0,.45); }
   .stone-dot.black { background: radial-gradient(circle at 32% 30%, #6a7180, #0b0d12 70%); }
   .stone-dot.white { background: radial-gradient(circle at 32% 30%, #fff, #c4c9d2 75%); border: 1px solid #999; }
+  .thinking .stone-dot { animation: breath 1s ease-in-out infinite; }
+  @keyframes breath {
+    50% { transform: scale(1.18); box-shadow: 0 0 14px rgba(236,181,84,.75); }
+  }
   #statusText { font-size: 17px; font-weight: 600; }
   #subStatus { margin-top: 8px; font-size: 12.5px; color: #9aa0b4; line-height: 1.6; min-height: 20px; }
-  .thinking #statusText::after { content: "…"; animation: dots 1.2s steps(4) infinite; }
+  #timeRow { margin-top: 7px; font-size: 12px; color: #8f96ad; letter-spacing: 1px; }
+  .thinking #statusText::after { content: ""; animation: dots 1.2s steps(4) infinite; }
   @keyframes dots { 0% { content: ""; } 25% { content: "·"; } 50% { content: "··"; } 75% { content: "···"; } }
+  .bubble {
+    margin-top: 9px; font-size: 12.5px; color: #f5c96b; min-height: 19px; line-height: 1.5;
+    opacity: 0; transform: translateY(-4px); transition: opacity .3s, transform .3s;
+  }
+  .bubble.show { opacity: 1; transform: translateY(0); }
   select, .btn {
     width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,.14);
     background: #262a3c; color: #e8e6df; font-size: 14px; font-family: inherit; cursor: pointer;
     transition: filter .15s, transform .05s;
   }
   select:hover, .btn:hover:not(:disabled) { filter: brightness(1.18); }
-  .btn:active:not(:disabled) { transform: scale(.98); }
+  .btn:active:not(:disabled) { transform: scale(.96); }
   .btn:disabled { opacity: .38; cursor: not-allowed; }
   .btn.primary {
     background: linear-gradient(180deg, #ecb554, #cd8f2b); color: #251906;
@@ -65,11 +90,12 @@
   }
   .field { margin-bottom: 10px; }
   .field label { display: block; font-size: 12px; color: #9aa0b4; margin-bottom: 5px; letter-spacing: 1px; }
-  .btn-row { display: flex; gap: 10px; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .score-row { display: flex; align-items: center; justify-content: space-around; text-align: center; }
   .score-row .num { font-size: 26px; font-weight: 700; }
   .score-row .lbl { font-size: 12px; color: #9aa0b4; margin-top: 3px; }
   .score-row .vs { font-size: 13px; color: #6d7387; }
+  .streak { display: none; margin-top: 9px; text-align: center; font-size: 12.5px; color: #f5b942; letter-spacing: 1px; }
   .link-btn { margin-top: 10px; width: 100%; background: none; border: none; color: #7d84a0; font-size: 12px; text-decoration: underline; cursor: pointer; }
   .help { font-size: 12.5px; color: #aab1c6; line-height: 1.9; }
   .help b { color: #e0c482; font-weight: 600; }
@@ -87,18 +113,22 @@
   <div class="board-wrap">
     <canvas id="board" width="640" height="640"></canvas>
     <div class="overlay" id="overlay">
+      <div id="confetti"></div>
       <div class="result" id="resultText"></div>
+      <div id="resultSub"></div>
       <button class="btn primary" style="width:auto; padding:10px 34px" id="againBtn">再来一局</button>
     </div>
   </div>
 
   <aside class="panel">
     <section class="card">
-      <div class="turn-row">
+      <div class="turn-row" id="turnRow">
         <div class="stone-dot black" id="turnDot"></div>
         <div>
           <div id="statusText">你的回合</div>
           <div id="subStatus">点击棋盘任意交叉点落子</div>
+          <div id="timeRow">⏱ 00:00 · 第 0 手</div>
+          <div class="bubble" id="bubble"></div>
         </div>
       </div>
     </section>
@@ -124,6 +154,7 @@
         <button class="btn primary" id="newBtn">新对局</button>
         <button class="btn" id="undoBtn">悔棋</button>
         <button class="btn" id="hintBtn">提示</button>
+        <button class="btn" id="soundBtn">🔊 音效</button>
       </div>
     </section>
 
@@ -135,6 +166,7 @@
         <div><div class="num" id="scoreA">0</div><div class="lbl">AI 胜</div></div>
         <div><div class="num" id="scoreD">0</div><div class="lbl">平局</div></div>
       </div>
+      <div class="streak" id="streakRow"></div>
       <button class="link-btn" id="resetScore">清零战绩</button>
     </section>
 
@@ -143,12 +175,13 @@
       黑白双方轮流在交叉点落子，率先在<b>横、竖、斜</b>任一方向连成<b>五子</b>者获胜。<br>
       · <b>悔棋</b>：撤回你与 AI 的最后一回合<br>
       · <b>提示</b>：让引擎为当前局面推荐一手<br>
-      · AI 引擎：模式识别评估（活四/冲四/活三…）+ α-β 剪枝深度搜索，能赢必赢、该挡必挡
+      · <b>音效</b>：开关落子与胜负音效<br>
+      · AI 引擎：模式识别评估 + α-β 剪枝深度搜索，能赢必赢、该挡必挡
     </section>
   </aside>
 </main>
 
-<footer>第 <span id="moveCount">0</span> 手 · 五子棋 Gomoku</footer>
+<footer>第 <span id="moveCount">0</span> 手 · 五子棋 Gomoku v2.0</footer>
 
 <script src="game.js"></script>
 <script>
@@ -165,17 +198,28 @@
 
   const $ = id => document.getElementById(id);
   const statusText = $('statusText'), subStatus = $('subStatus'), turnDot = $('turnDot');
-  const overlay = $('overlay'), resultText = $('resultText');
+  const overlay = $('overlay'), resultText = $('resultText'), resultSub = $('resultSub');
+  const bubble = $('bubble'), timeRow = $('timeRow');
 
   const COLS = 'ABCDEFGHIJKLMNO';
   const notation = (x, y) => COLS[x] + (SIZE - y);
+  const fmt = ms => {
+    const s = Math.floor(ms / 1000);
+    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  };
+  const pick = arr => arr[(Math.random() * arr.length) | 0];
 
   /* ---------------- 状态 ---------------- */
   let board, history, turn, playing, aiThinking, winCells, gameToken = 0;
   let playerColor, aiColor, aiThinkMs = 0;
   let hover = null, hintCell = null;
-  let animId = 0, pulse = 0;
+  let pulse = 0, loopOn = false, loopPending = false;
+  const dropAnims = new Map();          // 棋子落下动画: idx -> 开始时间
+  let gameStart = 0, timerIv = null, elapsedFinal = 0;
+  let bubbleTimer = null;
   let scores = loadScores();
+  let streak = Number(localStorage.getItem('wuziqi-streak') || 0) || 0;
+  let soundOn = localStorage.getItem('wuziqi-sound') !== '0';
 
   function loadScores() {
     try { return JSON.parse(localStorage.getItem('wuziqi-scores')) || { p: 0, a: 0, d: 0 }; }
@@ -184,6 +228,67 @@
   function saveScores() {
     try { localStorage.setItem('wuziqi-scores', JSON.stringify(scores)); } catch (e) {}
   }
+  function saveStreak() {
+    try { localStorage.setItem('wuziqi-streak', String(streak)); } catch (e) {}
+  }
+
+  /* ---------------- 音效（WebAudio 合成，无外部资源） ---------------- */
+  let actx = null;
+  function audio() {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    return actx;
+  }
+  // 首次交互解锁音频（浏览器自动播放策略）
+  window.addEventListener('pointerdown', () => {
+    const a = audio();
+    if (a && a.state === 'suspended') a.resume().catch(() => {});
+  }, { passive: true });
+
+  function tone(freq, dur, type, vol, delay, slideTo) {
+    const a = audio(); if (!a) return;
+    const t0 = a.currentTime + (delay || 0);
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, t0);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(30, slideTo), t0 + dur);
+    g.gain.setValueAtTime(vol || .2, t0);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(t0); o.stop(t0 + dur + .03);
+  }
+  function sndReady() {
+    if (!soundOn) return false;
+    const a = audio(); if (!a) return false;
+    if (a.state === 'suspended') a.resume().catch(() => {});
+    return a.state === 'running';
+  }
+  function sndStone(isBlack) {
+    if (!sndReady()) return;
+    tone(isBlack ? 235 : 305, .1, 'sine', .5, 0, isBlack ? 105 : 145);  // 低频“嗒”
+    tone(isBlack ? 900 : 1250, .03, 'triangle', .14);                    // 高频脆响
+  }
+  function sndClick() { if (sndReady()) tone(680, .05, 'triangle', .12); }
+  function sndWin()  { [523, 659, 784, 1047].forEach((f, i) => tone(f, .3, 'triangle', .22, i * .12)); tone(1319, .5, 'sine', .16, .5); }
+  function sndLose() { [392, 311, 262].forEach((f, i) => tone(f, .32, 'sine', .2, i * .17)); }
+  function sndDraw() { [440, 440].forEach((f, i) => tone(f, .2, 'sine', .16, i * .22)); }
+
+  /* ---------------- AI 台词 ---------------- */
+  const LINES = {
+    blockFive:  ['好险！差点让你连成五子！', '就想料到你会走这', '堵住啦，没门~'],
+    aiFour:     ['吃我一招！', '看这手！', '胜利在望~', '我的攻势开始了'],
+    playerFour: ['呀，大意了…', '你这手够狠！', '得小心你的三连了'],
+    aiThree:    ['步步为营~', '悄悄布局中…', '看好了'],
+    aiWin:      ['承让承让~', '我赢啦！再来一局？', '嘿嘿，棋高一着'],
+    aiLose:     ['棋差一着，佩服佩服！', '你赢了，厉害！', '这局算你的，下局我认真的'],
+    draw:       ['势均力敌，平分秋色~', '不打不相识，再来？'],
+  };
+  function aiSay(text) {
+    if (!text) return;
+    bubble.textContent = '💬 ' + text;
+    bubble.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(() => bubble.classList.remove('show'), 2800);
+  }
 
   /* ---------------- 对局流程 ---------------- */
   function newGame() {
@@ -191,19 +296,31 @@
     board = G.createBoard();
     history = [];
     winCells = null; hintCell = null; hover = null;
+    dropAnims.clear();
     playing = true; aiThinking = false; aiThinkMs = 0;
     playerColor = $('firstColor').value === 'player' ? G.BLACK : G.WHITE;
     aiColor = 3 - playerColor;
     turn = G.BLACK; // 黑棋先行
-    stopAnim();
     overlay.classList.remove('show');
+    $('confetti').innerHTML = '';
+    resultSub.textContent = '';
+    bubble.classList.remove('show');
+    gameStart = Date.now(); elapsedFinal = 0;
+    clearInterval(timerIv); timerIv = setInterval(tick, 500); tick();
     updatePanel(); render();
     if (turn === aiColor) scheduleAI();
+  }
+
+  function tick() {
+    if (playing) timeRow.textContent = '⏱ ' + fmt(Date.now() - gameStart) + ' · 第 ' + history.length + ' 手';
   }
 
   function doMove(x, y, role) {
     board[G.idx(x, y)] = role;
     history.push({ x, y, role });
+    dropAnims.set(G.idx(x, y), performance.now());
+    ensureLoop();
+    sndStone(role === G.BLACK);
     const wl = G.winLineAt(board, x, y);
     if (wl) { winCells = wl; endGame(role); }
     else if (history.length >= SIZE * SIZE) endGame(0);
@@ -230,17 +347,38 @@
       if (token !== gameToken) return;          // 期间开了新局，弃用
       aiThinking = false; aiThinkMs = dt;
       if (!playing) { updatePanel(); return; }
+      // 台词触发：基于落子前的局面分析
+      const a = G.analyzePoint(board, mv.x, mv.y, aiColor);
+      const d = G.analyzePoint(board, mv.x, mv.y, playerColor);
+      if (d.five)                     aiSay(pick(LINES.blockFive));
+      else if (a.liveFour || a.score >= 60000) aiSay(pick(LINES.aiFour));
+      else if (d.liveFour)            aiSay(pick(LINES.playerFour));
+      else if (a.score >= 50000)      aiSay(pick(LINES.aiThree));
       doMove(mv.x, mv.y, aiColor);
     }, 160);
   }
 
   function endGame(winnerRole) {
     playing = false; aiThinking = false;
-    if (winnerRole === 0) { scores.d++; resultText.textContent = '🤝 平局'; }
-    else if (winnerRole === playerColor) { scores.p++; resultText.textContent = '🎉 恭喜，你赢了！'; }
-    else { scores.a++; resultText.textContent = '🤖 AI 获胜'; }
-    saveScores();
-    setTimeout(function () { overlay.classList.add('show'); startAnim(); }, 500);
+    clearInterval(timerIv);
+    elapsedFinal = Date.now() - gameStart;
+    timeRow.textContent = '⏱ ' + fmt(elapsedFinal) + ' · 第 ' + history.length + ' 手';
+    const sub = '用时 ' + fmt(elapsedFinal) + ' · 共 ' + history.length + ' 手';
+    if (winnerRole === 0) {
+      scores.d++; streak = 0;
+      resultText.textContent = '🤝 平局'; resultSub.textContent = sub;
+      sndDraw(); aiSay(pick(LINES.draw));
+    } else if (winnerRole === playerColor) {
+      scores.p++; streak++;
+      resultText.textContent = '🎉 恭喜，你赢了！'; resultSub.textContent = sub;
+      sndWin(); throwConfetti(); aiSay(pick(LINES.aiLose));
+    } else {
+      scores.a++; streak = 0;
+      resultText.textContent = '🤖 AI 获胜'; resultSub.textContent = sub;
+      sndLose(); aiSay(pick(LINES.aiWin));
+    }
+    saveScores(); saveStreak();
+    setTimeout(function () { overlay.classList.add('show'); ensureLoop(); }, 500);
   }
 
   function undo() {
@@ -249,26 +387,44 @@
     while (history.length > minHist) {
       const m = history.pop();
       board[G.idx(m.x, m.y)] = G.EMPTY;
+      dropAnims.delete(G.idx(m.x, m.y));
       if (m.role === playerColor) break;   // 撤回到玩家上一手之前
     }
     winCells = null; hintCell = null; playing = true; turn = playerColor;
-    stopAnim(); overlay.classList.remove('show');
+    overlay.classList.remove('show'); $('confetti').innerHTML = '';
+    sndClick();
     render(); updatePanel();
   }
 
   function hint() {
     if (!(playing && !aiThinking && turn === playerColor)) return;
     const mv = G.bestMove(board, playerColor, $('difficulty').value);
-    hintCell = mv; render();
+    hintCell = mv; sndClick(); render();
     setTimeout(function () { hintCell = null; render(); }, 1800);
+  }
+
+  function throwConfetti() {
+    const box = $('confetti'); box.innerHTML = '';
+    const colors = ['#e64340', '#f5b942', '#2f9e44', '#4dabf7', '#b197fc', '#ff922b', '#f783ac'];
+    for (let i = 0; i < 60; i++) {
+      const s = document.createElement('span');
+      s.className = 'confetti';
+      s.style.left = (Math.random() * 100).toFixed(1) + '%';
+      s.style.background = colors[(Math.random() * colors.length) | 0];
+      s.style.animationDuration = (1.8 + Math.random() * 1.6).toFixed(2) + 's';
+      s.style.animationDelay = (Math.random() * .7).toFixed(2) + 's';
+      s.style.transform = 'rotate(' + ((Math.random() * 360) | 0) + 'deg)';
+      if (Math.random() < .4) s.style.borderRadius = '50%';
+      box.appendChild(s);
+    }
   }
 
   /* ---------------- 面板刷新 ---------------- */
   function updatePanel() {
     const thinking = aiThinking;
-    document.querySelector('.turn-row').classList.toggle('thinking', thinking);
+    $('turnRow').classList.toggle('thinking', thinking);
     if (!playing) {
-      statusText.textContent = winCells ? (winCells && board[G.idx(winCells[0])] === playerColor ? '你赢了' : 'AI 获胜') : '平局';
+      statusText.textContent = winCells ? (board[G.idx(winCells[0])] === playerColor ? '你赢了' : 'AI 获胜') : '平局';
       subStatus.textContent = '点击「再来一局」继续挑战';
       turnDot.className = 'stone-dot ' + (winCells ? (board[G.idx(winCells[0])] === G.BLACK ? 'black' : 'white') : 'black');
     } else if (thinking) {
@@ -280,21 +436,24 @@
       subStatus.textContent = '你执' + (playerColor === G.BLACK ? '黑' : '白') + '，点击交叉点落子';
       turnDot.className = 'stone-dot ' + (playerColor === G.BLACK ? 'black' : 'white');
     }
+    tick();
     const last = history[history.length - 1];
     if (last) {
       let t = '上一手：' + (last.role === G.BLACK ? '黑' : '白') + ' ' + notation(last.x, last.y);
       if (last.role === aiColor && aiThinkMs) t += '（AI 用时 ' + (aiThinkMs / 1000).toFixed(1) + 's）';
-      footerInfo(t);
-    } else footerInfo('');
+      document.querySelector('footer').innerHTML =
+        '第 ' + history.length + ' 手 · ' + t + ' · 五子棋 Gomoku v2.0';
+    } else {
+      document.querySelector('footer').innerHTML = '第 ' + history.length + ' 手 · 五子棋 Gomoku v2.0';
+    }
     $('undoBtn').disabled = aiThinking || history.length <= (playerColor === G.WHITE ? 1 : 0);
     $('hintBtn').disabled = !(playing && !aiThinking && turn === playerColor);
     $('scoreP').textContent = scores.p;
     $('scoreA').textContent = scores.a;
     $('scoreD').textContent = scores.d;
-  }
-  function footerInfo(t) {
-    document.querySelector('footer').innerHTML =
-      '第 ' + history.length + ' 手' + (t ? ' · ' + t : '') + ' · 五子棋 Gomoku';
+    const st = $('streakRow');
+    if (streak >= 2) { st.style.display = 'block'; st.textContent = '🔥 连胜 ' + streak + ' 场'; }
+    else st.style.display = 'none';
   }
 
   /* ---------------- 绘制 ---------------- */
@@ -341,10 +500,12 @@
     // 最后一手标记
     if (history.length && !winCells) {
       const m = history[history.length - 1];
-      const cx = PAD + m.x * CELL, cy = PAD + m.y * CELL;
-      ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#e64338'; ctx.fill();
-      ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.stroke();
+      if (!dropAnims.has(G.idx(m.x, m.y))) {     // 落子动画结束后才显示标记
+        const cx = PAD + m.x * CELL, cy = PAD + m.y * CELL;
+        ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#e64338'; ctx.fill();
+        ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.stroke();
+      }
     }
     // 获胜连线
     if (winCells) {
@@ -382,8 +543,24 @@
     ctx.restore();
   }
 
+  function easeOutBack(t) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+
   function drawStone(x, y, role, alpha) {
-    const cx = PAD + x * CELL, cy = PAD + y * CELL, R = CELL * 0.44;
+    const key = G.idx(x, y);
+    let scale = 1;
+    if (dropAnims.has(key)) {
+      const t = (performance.now() - dropAnims.get(key)) / 240;
+      if (t >= 1) dropAnims.delete(key);
+      else {
+        scale = .25 + .75 * easeOutBack(Math.min(1, t));
+        alpha *= .45 + .55 * t;
+        loopPending = true;
+      }
+    }
+    const cx = PAD + x * CELL, cy = PAD + y * CELL, R = CELL * 0.44 * scale;
     ctx.save();
     ctx.globalAlpha = alpha;
     if (alpha === 1) { ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2; }
@@ -397,16 +574,20 @@
     ctx.restore();
   }
 
-  /* 获胜连线呼吸动画 */
-  function startAnim() {
-    cancelAnimationFrame(animId);
-    (function loop() {
-      if (!winCells) return;
-      pulse += 0.09; render();
-      animId = requestAnimationFrame(loop);
+  /* 主循环：仅在获胜连线呼吸 / 落子动画期间运转 */
+  function ensureLoop() {
+    if (loopOn) return;
+    loopOn = true;
+    (function frame() {
+      let busy = false;
+      if (winCells) { pulse += 0.09; busy = true; }
+      loopPending = false;
+      render();                                  // 落子动画未完会置 loopPending
+      if (loopPending) busy = true;
+      if (busy) requestAnimationFrame(frame);
+      else loopOn = false;
     })();
   }
-  function stopAnim() { cancelAnimationFrame(animId); }
 
   /* ---------------- 输入 ---------------- */
   function eventToCell(e) {
@@ -426,12 +607,21 @@
   });
   cv.addEventListener('mouseleave', () => { if (hover) { hover = null; render(); } });
 
-  $('newBtn').addEventListener('click', newGame);
-  $('againBtn').addEventListener('click', newGame);
+  $('newBtn').addEventListener('click', () => { sndClick(); newGame(); });
+  $('againBtn').addEventListener('click', () => { sndClick(); newGame(); });
   $('undoBtn').addEventListener('click', undo);
   $('hintBtn').addEventListener('click', hint);
+  $('soundBtn').addEventListener('click', () => {
+    soundOn = !soundOn;
+    try { localStorage.setItem('wuziqi-sound', soundOn ? '1' : '0'); } catch (e) {}
+    $('soundBtn').textContent = soundOn ? '🔊 音效' : '🔇 静音';
+    if (soundOn) sndClick();
+  });
+  if (!soundOn) $('soundBtn').textContent = '🔇 静音';
   $('firstColor').addEventListener('change', newGame);
-  $('resetScore').addEventListener('click', () => { scores = { p: 0, a: 0, d: 0 }; saveScores(); updatePanel(); });
+  $('resetScore').addEventListener('click', () => {
+    scores = { p: 0, a: 0, d: 0 }; streak = 0; saveScores(); saveStreak(); updatePanel();
+  });
 
   // 调试 / 自动化测试钩子
   window.__wuziqi = {
@@ -456,6 +646,17 @@
         }
       }, 40);
       return out;
+    },
+    // 测试辅助：胜利特效 / 台词 / 落子音效预览
+    _test: {
+      celebrate() {
+        resultText.textContent = '🎉 恭喜，你赢了！';
+        resultSub.textContent = '特效预览';
+        throwConfetti(); sndWin();
+        overlay.classList.add('show'); ensureLoop();
+      },
+      say(t) { aiSay(t || '你好，我是五子棋 AI~'); },
+      stone() { sndStone(true); setTimeout(() => sndStone(false), 350); },
     },
   };
 
