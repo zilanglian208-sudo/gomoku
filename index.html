@@ -8,14 +8,13 @@
 <style>
   :root {
     --paper: #f3ede1;
-    --paper-deep: #eae1cf;
     --ink: #2b2620;
     --ink-soft: #6f6656;
     --ink-faint: #a3988a;
     --hairline: #d8cdb8;
     --seal: #a63c2f;
     --seal-deep: #8c3125;
-    --wood-line: #5c401e;
+    --gold: #c9962e;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
@@ -29,13 +28,11 @@
   }
   :focus { outline: none; }
   :focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
-
   .serif { font-family: "Noto Serif SC", "Source Han Serif SC", "STZhongsong", "SimSun", serif; }
 
-  /* ---------------- 顶栏 ---------------- */
   header {
-    max-width: 1020px; margin: 0 auto;
-    padding: 26px 20px 18px;
+    max-width: 1060px; margin: 0 auto;
+    padding: 24px 20px 16px;
     display: flex; align-items: baseline; gap: 14px;
     border-bottom: 1px solid var(--hairline);
   }
@@ -53,14 +50,18 @@
   header .meta { margin-left: auto; font-size: 12px; color: var(--ink-faint); text-align: right; line-height: 1.7; }
 
   main {
-    max-width: 1020px; margin: 0 auto;
+    max-width: 1060px; margin: 0 auto;
     display: flex; flex-wrap: wrap; gap: 28px;
-    padding: 24px 20px 40px;
+    padding: 22px 20px 40px;
     align-items: flex-start;
   }
 
-  /* ---------------- 棋盘 ---------------- */
   .board-card { position: relative; }
+  .board-card.shake { animation: shake .4s; }
+  @keyframes shake {
+    20% { transform: translateX(-5px); } 40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); } 80% { transform: translateX(3px); }
+  }
   canvas {
     display: block; width: 100%; max-width: 620px;
     border-radius: 4px;
@@ -70,47 +71,89 @@
 
   .overlay {
     position: absolute; inset: 0; border-radius: 4px; overflow: hidden;
-    background: rgba(28, 22, 15, .58);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-    opacity: 0; pointer-events: none; transition: opacity .35s;
+    background: rgba(28, 22, 15, .6);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    opacity: 0; pointer-events: none; transition: opacity .35s; padding: 20px;
   }
   .overlay.show { opacity: 1; pointer-events: auto; }
   #confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
   .confetti { position: absolute; top: -18px; width: 9px; height: 14px; opacity: .95; border-radius: 2px; animation: cfall linear forwards; }
   @keyframes cfall { to { transform: translateY(740px) rotate(680deg); } }
   .overlay .result {
-    color: #f7f2e7; font-size: 44px; font-weight: 700; letter-spacing: 12px; text-indent: 12px;
+    color: #f7f2e7; font-size: 40px; font-weight: 700; letter-spacing: 12px; text-indent: 12px;
     text-shadow: 0 2px 14px rgba(0,0,0,.5);
     border-bottom: 3px solid var(--seal); padding-bottom: 10px;
   }
   .overlay.show .result { animation: pop .5s cubic-bezier(.2,1.6,.4,1); }
   @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   #resultSub { color: rgba(247,242,231,.75); font-size: 14px; letter-spacing: 1px; }
+  .settle-row { display: flex; gap: 10px; }
+  .settle-chip {
+    color: #f7f2e7; font-size: 13px; letter-spacing: 1px;
+    border: 1px solid rgba(247,242,231,.4); border-radius: 3px; padding: 4px 12px;
+  }
+  .settle-chip.gold { border-color: var(--gold); color: #ecd9a8; }
+  .settle-chip.promote { border-color: var(--gold); background: rgba(201,150,46,.25); color: #ffe9b0; font-weight: 600; }
+  #resultAch { color: #ecd9a8; font-size: 13px; letter-spacing: 1px; min-height: 18px; }
+  .overlay .btn-row2 { display: flex; gap: 10px; }
+  .overlay .btn-row2 .btn { width: auto; padding: 10px 26px; }
+  .btn.ghost {
+    background: transparent; border-color: rgba(247,242,231,.5); color: #f7f2e7;
+  }
+  .btn.ghost:hover:not(:disabled) { background: rgba(247,242,231,.12); border-color: #f7f2e7; }
 
   /* ---------------- 侧栏 ---------------- */
-  .panel { width: 320px; }
+  .panel { width: 330px; }
 
-  .status-block { padding: 2px 0 18px; }
+  .career-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 2px 0 16px;
+  }
+  .rank-badge {
+    flex: none; color: #f7f2e7; font-size: 15px; font-weight: 700; letter-spacing: 3px; text-indent: 3px;
+    padding: 7px 12px; border-radius: 3px;
+    box-shadow: inset 0 0 0 1px rgba(247,242,231,.3);
+  }
+  .rank-mid { flex: 1; min-width: 0; }
+  .rank-mid .bar { height: 8px; background: #e2d7c0; border-radius: 4px; overflow: hidden; }
+  .rank-mid .bar i { display: block; height: 100%; background: var(--gold); border-radius: 4px; transition: width .5s; }
+  .rank-mid .bar-text { margin-top: 5px; font-size: 11px; color: var(--ink-faint); }
+  .coin-chip {
+    flex: none; font-size: 14px; font-weight: 600; color: #7a5c12;
+    background: #f3e6c3; border: 1px solid #dfc98a;
+    border-radius: 20px; padding: 6px 14px;
+  }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--hairline); }
+  .tab {
+    flex: 1; text-align: center; padding: 10px 0 9px;
+    font-size: 14px; color: var(--ink-soft); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    letter-spacing: 2px; text-indent: 2px;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--seal); font-weight: 700; border-bottom-color: var(--seal); }
+
+  .status-block { padding: 16px 0 14px; }
   .status-line { display: flex; align-items: center; gap: 10px; }
   .stone-dot { width: 18px; height: 18px; border-radius: 50%; flex: none; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
   .stone-dot.black { background: radial-gradient(circle at 32% 30%, #6a7180, #0b0d12 70%); }
   .stone-dot.white { background: radial-gradient(circle at 32% 30%, #fff, #c4c9d2 75%); border: 1px solid #999; }
   .thinking .stone-dot { animation: breath 1s ease-in-out infinite; }
   @keyframes breath { 50% { transform: scale(1.25); } }
-  #statusText { font-size: 24px; font-weight: 700; }
+  #statusText { font-size: 22px; font-weight: 700; }
   .thinking #statusText::after { content: ""; animation: dots 1.2s steps(4) infinite; }
   @keyframes dots { 0% { content: ""; } 25% { content: "·"; } 50% { content: "··"; } 75% { content: "···"; } }
-  #subStatus { margin-top: 6px; font-size: 13px; color: var(--ink-soft); }
+  #subStatus { margin-top: 5px; font-size: 13px; color: var(--ink-soft); }
   #moveMeta { margin-top: 4px; font-size: 12px; color: var(--ink-faint); }
   .bubble {
-    margin-top: 12px; font-size: 14px; color: var(--seal-deep); min-height: 21px; line-height: 1.6;
+    margin-top: 10px; font-size: 14px; color: var(--seal-deep); min-height: 21px; line-height: 1.6;
     opacity: 0; transform: translateY(-4px); transition: opacity .3s, transform .3s;
   }
   .bubble.show { opacity: 1; transform: translateY(0); }
 
   .rule { border: none; border-top: 1px solid var(--hairline); margin: 0; }
-
-  section { padding: 18px 0; }
+  section { padding: 16px 0; }
   section h2 {
     font-size: 12px; font-weight: 600; color: var(--ink-faint);
     letter-spacing: 3px; margin-bottom: 12px;
@@ -134,25 +177,26 @@
   .btn:hover:not(:disabled) { background: #f1e9d8; border-color: var(--ink-faint); }
   .btn:active:not(:disabled) { transform: translateY(1px); }
   .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn small { font-size: 11px; color: var(--ink-faint); }
   .btn.primary {
     background: var(--seal); border-color: var(--seal-deep); color: #f7f2e7; font-weight: 600; letter-spacing: 4px; text-indent: 4px;
   }
   .btn.primary:hover:not(:disabled) { background: var(--seal-deep); }
+  .btn.primary small { color: rgba(247,242,231,.8); }
 
-  /* 战绩：一行数字，无卡片 */
-  .score-row { display: flex; align-items: flex-end; gap: 22px; }
+  .score-row { display: flex; align-items: flex-end; gap: 20px; }
   .score-row .item { text-align: center; }
-  .score-row .num { font-size: 30px; font-weight: 700; line-height: 1.1; }
+  .score-row .num { font-size: 28px; font-weight: 700; line-height: 1.1; }
   .score-row .num.you { color: var(--seal); }
   .score-row .lbl { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
-  .score-row .dash { color: var(--hairline); font-size: 22px; padding-bottom: 14px; }
+  .score-row .dash { color: var(--hairline); font-size: 20px; padding-bottom: 12px; }
   .streak {
     display: none; margin-left: auto; align-self: center;
     font-size: 12px; color: var(--seal-deep); border: 1px solid var(--seal);
     border-radius: 3px; padding: 3px 8px; transform: rotate(-2deg);
   }
   .link-btn {
-    margin-top: 12px; background: none; border: none; color: var(--ink-faint);
+    margin-top: 10px; background: none; border: none; color: var(--ink-faint);
     font-size: 12px; text-decoration: underline; cursor: pointer; padding: 0; font-family: inherit;
   }
   .link-btn:hover { color: var(--ink-soft); }
@@ -160,13 +204,61 @@
   .help { font-size: 13px; color: var(--ink-soft); line-height: 2; }
   .help b { color: var(--ink); font-weight: 600; }
 
+  /* ---------------- 残局 ---------------- */
+  .puzzle-head { font-size: 13px; color: var(--ink-soft); line-height: 1.9; margin-bottom: 12px; }
+  .puzzle-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .pz {
+    position: relative; aspect-ratio: 1; border-radius: 4px;
+    border: 1px solid #c9bda6; background: #fbf7ee;
+    font-family: inherit; font-size: 15px; font-weight: 600; color: var(--ink);
+    cursor: pointer; line-height: 1;
+  }
+  .pz:hover { background: #f1e9d8; }
+  .pz .stars { position: absolute; bottom: 3px; left: 0; right: 0; font-size: 9px; color: var(--gold); letter-spacing: 1px; }
+  .pz.done { background: #f1e9d8; border-color: var(--gold); }
+  .pz.active { border-color: var(--seal); box-shadow: 0 0 0 1px var(--seal); }
+
+  /* ---------------- 成就 ---------------- */
+  .ach-list { display: flex; flex-direction: column; gap: 10px; }
+  .ach {
+    display: flex; align-items: center; gap: 12px;
+    border: 1px solid var(--hairline); border-radius: 4px;
+    padding: 10px 12px; background: #fbf7ee;
+  }
+  .ach.locked { opacity: .5; background: transparent; }
+  .ach .medal {
+    width: 34px; height: 34px; flex: none; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700; color: #f7f2e7; background: var(--gold);
+    font-family: "Noto Serif SC", "SimSun", serif;
+  }
+  .ach.locked .medal { background: #c9bda6; }
+  .ach .t { font-size: 14px; font-weight: 600; }
+  .ach .d { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
+  .ach .ok { margin-left: auto; font-size: 12px; color: var(--gold); flex: none; }
+
   footer {
-    max-width: 1020px; margin: 0 auto;
+    max-width: 1060px; margin: 0 auto;
     padding: 14px 20px 30px;
     border-top: 1px solid var(--hairline);
     font-size: 12px; color: var(--ink-faint);
     display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
   }
+
+  /* Toast */
+  #toasts {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; gap: 8px; z-index: 99; pointer-events: none;
+  }
+  .toast {
+    background: rgba(43,38,32,.92); color: #f7f2e7;
+    font-size: 13px; letter-spacing: 1px;
+    border-radius: 4px; padding: 9px 18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.3);
+    animation: toastIn .3s ease-out;
+  }
+  .toast.out { opacity: 0; transition: opacity .4s; }
+  @keyframes toastIn { 0% { transform: translateY(-14px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 
   @media (max-width: 1020px) {
     header h1 { font-size: 24px; }
@@ -179,94 +271,138 @@
   <div class="seal-mark serif">弈</div>
   <h1 class="serif">五子棋</h1>
   <div class="tagline">人机对弈</div>
-  <div class="meta">连珠引擎 v2.1<br>纯本地运行</div>
+  <div class="meta">连珠引擎 v3.0<br>残局 · 段位 · 成就</div>
 </header>
 
 <main>
-  <div class="board-card">
+  <div class="board-card" id="boardCard">
     <canvas id="board" width="640" height="640"></canvas>
     <div class="overlay" id="overlay">
       <div id="confetti"></div>
       <div class="result serif" id="resultText"></div>
       <div id="resultSub"></div>
-      <button class="btn primary" style="width:auto; padding:10px 36px" id="againBtn">再来一局</button>
+      <div class="settle-row" id="settleRow"></div>
+      <div id="resultAch"></div>
+      <div class="btn-row2">
+        <button class="btn primary" id="againBtn">再来一局</button>
+        <button class="btn ghost" id="shareBtn">分享战绩</button>
+      </div>
     </div>
   </div>
 
   <aside class="panel">
-    <div class="status-block" id="turnRow">
-      <div class="status-line">
-        <div class="stone-dot black" id="turnDot"></div>
-        <div id="statusText">轮到你了</div>
+    <div class="career-row">
+      <div class="rank-badge" id="rankBadge">青铜</div>
+      <div class="rank-mid">
+        <div class="bar"><i id="rankBar" style="width:0%"></i></div>
+        <div class="bar-text" id="rankText">0 / 100</div>
       </div>
-      <div id="subStatus">执黑先行，点击交叉点落子</div>
-      <div id="moveMeta">第 0 手 · 00:00</div>
-      <div class="bubble" id="bubble"></div>
+      <div class="coin-chip" id="coinChip">金币 30</div>
     </div>
 
-    <hr class="rule">
+    <div class="tabs">
+      <div class="tab active" data-tab="match">对 弈</div>
+      <div class="tab" data-tab="puzzle">残 局</div>
+      <div class="tab" data-tab="ach">成 就</div>
+    </div>
 
-    <section>
-      <h2>对 局</h2>
-      <div class="field">
-        <label>AI 棋力</label>
-        <select id="difficulty">
-          <option value="easy">入门</option>
-          <option value="medium" selected>进阶</option>
-          <option value="hard">高手（深度搜索）</option>
-        </select>
+    <div id="tab-match">
+      <div class="status-block" id="turnRow">
+        <div class="status-line">
+          <div class="stone-dot black" id="turnDot"></div>
+          <div id="statusText" class="serif">轮到你了</div>
+        </div>
+        <div id="subStatus">执黑先行，点击交叉点落子</div>
+        <div id="moveMeta">第 0 手 · 00:00</div>
+        <div class="bubble" id="bubble"></div>
       </div>
-      <div class="field">
-        <label>先手</label>
-        <select id="firstColor">
-          <option value="player" selected>我执黑先行</option>
-          <option value="ai">AI 执黑先行</option>
-        </select>
-      </div>
-      <div class="btn-row">
-        <button class="btn primary" id="newBtn">新对局</button>
-        <button class="btn" id="undoBtn">悔棋</button>
-        <button class="btn" id="hintBtn">提示</button>
-        <button class="btn" id="soundBtn">音效 · 开</button>
-      </div>
-    </section>
 
-    <hr class="rule">
+      <hr class="rule">
 
-    <section>
-      <h2>战 绩</h2>
-      <div class="score-row">
-        <div class="item"><div class="num you" id="scoreP">0</div><div class="lbl">你</div></div>
-        <div class="dash">—</div>
-        <div class="item"><div class="num" id="scoreA">0</div><div class="lbl">AI</div></div>
-        <div class="dash">—</div>
-        <div class="item"><div class="num" id="scoreD">0</div><div class="lbl">和棋</div></div>
-        <div class="streak" id="streakRow">连胜 2 场</div>
-      </div>
-      <button class="link-btn" id="resetScore">清零战绩</button>
-    </section>
+      <section>
+        <h2>对 局</h2>
+        <div class="field">
+          <label>AI 棋力</label>
+          <select id="difficulty">
+            <option value="easy">入门</option>
+            <option value="medium" selected>进阶</option>
+            <option value="hard">高手（深度搜索）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>先手</label>
+          <select id="firstColor">
+            <option value="player" selected>我执黑先行</option>
+            <option value="ai">AI 执黑先行</option>
+          </select>
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="newBtn">新对局</button>
+          <button class="btn" id="undoBtn">悔棋 <small>· 3 金币</small></button>
+          <button class="btn" id="hintBtn">提示 <small>· 5 金币</small></button>
+          <button class="btn" id="soundBtn">音效 · 开</button>
+        </div>
+      </section>
+
+      <hr class="rule">
+
+      <section>
+        <h2>战 绩</h2>
+        <div class="score-row">
+          <div class="item"><div class="num you" id="scoreP">0</div><div class="lbl">你</div></div>
+          <div class="dash">—</div>
+          <div class="item"><div class="num" id="scoreA">0</div><div class="lbl">AI</div></div>
+          <div class="dash">—</div>
+          <div class="item"><div class="num" id="scoreD">0</div><div class="lbl">和棋</div></div>
+          <div class="streak" id="streakRow">连胜 2 场</div>
+        </div>
+        <button class="link-btn" id="resetScore">清零战绩</button>
+      </section>
+    </div>
+
+    <div id="tab-puzzle" hidden>
+      <section>
+        <h2>残局挑战</h2>
+        <div class="puzzle-head" id="puzzleHead"></div>
+        <div class="puzzle-grid" id="puzzleGrid"></div>
+        <div class="puzzle-head" style="margin-top:12px">
+          三星标准：6 秒内破解 · 两星：15 秒内 · 一星：完成即得<br>
+          首次破解可得金币，重复挑战亦有奖励。
+        </div>
+      </section>
+    </div>
+
+    <div id="tab-ach" hidden>
+      <section>
+        <h2>成就</h2>
+        <div class="ach-list" id="achList"></div>
+      </section>
+    </div>
 
     <hr class="rule">
 
     <section class="help">
       <h2>说 明</h2>
       双方轮流落子，先在横、竖、斜任一方向连成<b>五子</b>者胜。<br>
-      悔棋撤回你与 AI 的最后一回合；提示由引擎推荐一手。<br>
-      AI 采用连珠棋型评估与 α-β 剪枝搜索，能赢必赢、该挡必挡。
+      胜局提升段位与金币；提示与悔棋消耗金币，每日签到补足。
     </section>
   </aside>
 </main>
 
 <footer>
-  <span id="footLeft">纯前端实现，数据仅保存在本机</span>
-  <span id="footRight">五子棋 · 连珠 v2.1</span>
+  <span>纯前端实现，数据仅保存在本机</span>
+  <span>五子棋 · 连珠 v3.0</span>
 </footer>
 
+<div id="toasts"></div>
+
 <script src="game.js"></script>
+<script src="puzzles.js"></script>
 <script>
 (function () {
   'use strict';
   const G = window.Gomoku;
+  const PUZZLES = window.PUZZLES || [];
   const SIZE = G.SIZE;
 
   const cv = document.getElementById('board');
@@ -288,27 +424,145 @@
   };
   const pick = arr => arr[(Math.random() * arr.length) | 0];
 
-  /* ---------------- 状态 ---------------- */
-  let board, history, turn, playing, aiThinking, winCells, gameToken = 0;
-  let playerColor, aiColor, aiThinkMs = 0;
-  let hover = null, hintCell = null;
-  let pulse = 0, loopOn = false, loopPending = false;
-  const dropAnims = new Map();
-  let gameStart = 0, timerIv = null;
-  let bubbleTimer = null;
-  let scores = loadScores();
-  let streak = Number(localStorage.getItem('wuziqi-streak') || 0) || 0;
-  let soundOn = localStorage.getItem('wuziqi-sound') !== '0';
+  /* ---------------- 生涯数据（段位 / 金币 / 成就 / 残局） ---------------- */
+  const RANKS = [
+    ['青铜', 0, '#8c6239'], ['白银', 100, '#8f9aa6'], ['黄金', 250, '#c9962e'],
+    ['铂金', 450, '#3f8f7b'], ['钻石', 700, '#3b6ea5'], ['王者', 1000, '#a63c2f'],
+  ];
+  const ACH_DEFS = [
+    ['first_game', '初出茅庐', '完成第一局对弈'],
+    ['first_win', '旗开得胜', '赢下第一局'],
+    ['streak3', '三连胜', '连续获胜 3 场'],
+    ['streak5', '五连胜', '连续获胜 5 场'],
+    ['beat_hard', '高手过招', '击败困难级 AI'],
+    ['rank_gold', '登堂入室', '达到黄金段位'],
+    ['fast_win', '快棋手', '30 手内取胜'],
+    ['puzzle5', '解题人', '完成 5 道残局'],
+    ['puzzle_all', '满腹韬略', '完成全部残局'],
+    ['rich', '腰缠万贯', '持有 100 金币'],
+  ];
+  const COIN_COST = { undo: 3, hint: 5 };
+  const SIGN_IN_COIN = 20;
 
-  function loadScores() {
-    try { return JSON.parse(localStorage.getItem('wuziqi-scores')) || { p: 0, a: 0, d: 0 }; }
-    catch (e) { return { p: 0, a: 0, d: 0 }; }
+  let career = loadCareer();
+  function loadCareer() {
+    try {
+      const c = JSON.parse(localStorage.getItem('wuziqi-career'));
+      if (c && typeof c === 'object') {
+        return { rank: c.rank | 0, coins: c.coins | 0, ach: c.ach || {}, puzzles: c.puzzles || {}, lastSignIn: c.lastSignIn || '' };
+      }
+    } catch (e) {}
+    return { rank: 0, coins: 30, ach: {}, puzzles: {}, lastSignIn: '' };
   }
-  function saveScores() {
-    try { localStorage.setItem('wuziqi-scores', JSON.stringify(scores)); } catch (e) {}
+  function saveCareer() {
+    try { localStorage.setItem('wuziqi-career', JSON.stringify(career)); } catch (e) {}
   }
-  function saveStreak() {
-    try { localStorage.setItem('wuziqi-streak', String(streak)); } catch (e) {}
+  function rankOf(pts) {
+    let idx = 0;
+    for (let i = 0; i < RANKS.length; i++) if (pts >= RANKS[i][1]) idx = i;
+    return idx;
+  }
+  function rankName(idx) { return RANKS[idx][0]; }
+
+  function addCoins(n, why) {
+    if (!n) return;
+    career.coins = Math.max(0, career.coins + n);
+    saveCareer();
+    if (why) toast((n > 0 ? '金币 +' + n : '金币 ' + n) + (why ? ' · ' + why : ''));
+    updateCareerPanel();
+    checkAch();
+  }
+  function addRank(n) {
+    const before = rankOf(career.rank);
+    career.rank = Math.max(0, career.rank + n);
+    const after = rankOf(career.rank);
+    saveCareer();
+    updateCareerPanel();
+    if (after > before) {
+      toast('段位晋升 · ' + rankName(after));
+      sndWin();
+    }
+    checkAch();
+    return { before, after };
+  }
+
+  function toast(text, ms) {
+    const box = $('toasts');
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = text;
+    box.appendChild(t);
+    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 450); }, ms || 2400);
+  }
+
+  function updateCareerPanel() {
+    const idx = rankOf(career.rank);
+    const cur = RANKS[idx][1];
+    const next = idx + 1 < RANKS.length ? RANKS[idx + 1][1] : null;
+    $('rankBadge').textContent = rankName(idx);
+    $('rankBadge').style.background = RANKS[idx][2];
+    if (next != null) {
+      $('rankBar').style.width = Math.min(100, ((career.rank - cur) / (next - cur) * 100)).toFixed(1) + '%';
+      $('rankText').textContent = career.rank + ' / ' + next;
+    } else {
+      $('rankBar').style.width = '100%';
+      $('rankText').textContent = career.rank + ' · 已至最高';
+    }
+    $('coinChip').textContent = '金币 ' + career.coins;
+  }
+
+  /* ---------------- 每日签到 ---------------- */
+  (function signIn() {
+    const today = new Date();
+    const key = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+    if (career.lastSignIn !== key) {
+      career.lastSignIn = key;
+      career.coins += SIGN_IN_COIN;
+      saveCareer();
+      setTimeout(() => toast('每日签到 · 金币 +' + SIGN_IN_COIN), 800);
+    }
+  })();
+
+  /* ---------------- 成就 ---------------- */
+  function achProgress(id) {
+    const done = n => career.puzzles && Object.keys(career.puzzles).length >= n;
+    switch (id) {
+      case 'first_game': return session.games >= 1;
+      case 'first_win': return scores.p >= 1;
+      case 'streak3': return streak >= 3;
+      case 'streak5': return streak >= 5;
+      case 'beat_hard': return session.beatHard;
+      case 'rank_gold': return rankOf(career.rank) >= 2;
+      case 'fast_win': return session.fastWin;
+      case 'puzzle5': return done(5);
+      case 'puzzle_all': return PUZZLES.length > 0 && done(PUZZLES.length);
+      case 'rich': return career.coins >= 100;
+      default: return false;
+    }
+  }
+  function checkAch() {
+    for (const [id, name] of ACH_DEFS) {
+      if (career.ach[id]) continue;
+      if (achProgress(id)) {
+        career.ach[id] = 1;
+        saveCareer();
+        toast('成就解锁 · ' + name);
+        renderAch();
+      }
+    }
+  }
+  function renderAch() {
+    const box = $('achList');
+    box.innerHTML = '';
+    for (const [id, name, desc] of ACH_DEFS) {
+      const done = !!career.ach[id];
+      const d = document.createElement('div');
+      d.className = 'ach' + (done ? '' : ' locked');
+      d.innerHTML = '<div class="medal">' + name[0] + '</div>' +
+        '<div><div class="t">' + name + '</div><div class="d">' + desc + '</div></div>' +
+        (done ? '<div class="ok">已达成</div>' : '');
+      box.appendChild(d);
+    }
   }
 
   /* ---------------- 音效（WebAudio 合成） ---------------- */
@@ -349,6 +603,7 @@
   function sndWin()  { [523, 659, 784, 1047].forEach((f, i) => tone(f, .3, 'triangle', .22, i * .12)); tone(1319, .5, 'sine', .16, .5); }
   function sndLose() { [392, 311, 262].forEach((f, i) => tone(f, .32, 'sine', .2, i * .17)); }
   function sndDraw() { [440, 440].forEach((f, i) => tone(f, .2, 'sine', .16, i * .22)); }
+  function sndWrong() { if (sndReady()) { tone(220, .12, 'square', .12); tone(180, .16, 'square', .1, .1); } }
 
   /* ---------------- AI 台词 ---------------- */
   const LINES = {
@@ -359,6 +614,8 @@
     aiWin:      ['承让。', '我赢了，再来一局？', '棋高一着。'],
     aiLose:     ['棋差一着，佩服。', '你赢了，厉害。', '这局算你的，下局我认真下。'],
     draw:       ['势均力敌，平分秋色。', '不打不相识，再来一局？'],
+    puzzleOK:   ['妙手。', '正是此点。', '杀形已成。'],
+    puzzleBad:  ['再想想。', '此处不妥。', '换个位置试试。'],
   };
   function aiSay(text) {
     if (!text) return;
@@ -368,9 +625,41 @@
     bubbleTimer = setTimeout(() => bubble.classList.remove('show'), 2800);
   }
 
+  /* ---------------- 状态 ---------------- */
+  let board, history, turn, playing, aiThinking, winCells, gameToken = 0;
+  let playerColor, aiColor, aiThinkMs = 0;
+  let hover = null, hintCell = null;
+  let pulse = 0, loopOn = false, loopPending = false;
+  const dropAnims = new Map();
+  let gameStart = 0, timerIv = null;
+  let bubbleTimer = null;
+  let soundOn = localStorage.getItem('wuziqi-sound') !== '0';
+
+  let scores = loadScores();
+  let streak = Number(localStorage.getItem('wuziqi-streak') || 0) || 0;
+  function loadScores() {
+    try { return JSON.parse(localStorage.getItem('wuziqi-scores')) || { p: 0, a: 0, d: 0 }; }
+    catch (e) { return { p: 0, a: 0, d: 0 }; }
+  }
+  function saveScores() {
+    try { localStorage.setItem('wuziqi-scores', JSON.stringify(scores)); } catch (e) {}
+  }
+  function saveStreak() {
+    try { localStorage.setItem('wuziqi-streak', String(streak)); } catch (e) {}
+  }
+
+  // 本局会话统计（成就用）
+  const session = { games: 0, beatHard: false, fastWin: false };
+
+  // 模式：match 对弈 / puzzle 残局
+  let mode = 'match';
+  let puzzleIndex = -1, puzzleSolved = false, puzzleStart = 0, puzzlePlaced = null, wrongMark = null;
+  let matchSnapshot = null;
+
   /* ---------------- 对局流程 ---------------- */
   function newGame() {
     gameToken++;
+    mode = 'match';
     board = G.createBoard();
     history = [];
     winCells = null; hintCell = null; hover = null;
@@ -382,6 +671,9 @@
     overlay.classList.remove('show');
     $('confetti').innerHTML = '';
     resultSub.textContent = '';
+    $('settleRow').innerHTML = '';
+    $('resultAch').textContent = '';
+    $('againBtn').textContent = '再来一局';
     bubble.classList.remove('show');
     gameStart = Date.now();
     clearInterval(timerIv); timerIv = setInterval(tick, 500); tick();
@@ -391,7 +683,7 @@
 
   function tick() {
     const last = history[history.length - 1];
-    let meta = '第 ' + history.length + ' 手 · ' + fmt(playing ? Date.now() - gameStart : (gameStart ? Date.now() - gameStart : 0));
+    let meta = '第 ' + history.length + ' 手 · ' + fmt(playing ? Date.now() - gameStart : Date.now() - gameStart);
     if (last) meta += ' · 上一手 ' + (last.role === G.BLACK ? '黑' : '白') + ' ' + notation(last.x, last.y);
     moveMeta.textContent = meta;
   }
@@ -402,6 +694,7 @@
     dropAnims.set(G.idx(x, y), performance.now());
     ensureLoop();
     sndStone(role === G.BLACK);
+    try { navigator.vibrate && navigator.vibrate(12); } catch (e) {}
     const wl = G.winLineAt(board, x, y);
     if (wl) { winCells = wl; endGame(role); }
     else if (history.length >= SIZE * SIZE) endGame(0);
@@ -410,6 +703,7 @@
   }
 
   function playerMove(x, y) {
+    if (mode === 'puzzle') { puzzleTap(x, y); return; }
     if (!playing || aiThinking || turn !== playerColor) return;
     if (board[G.idx(x, y)] !== G.EMPTY) return;
     hintCell = null;
@@ -418,6 +712,7 @@
   }
 
   function scheduleAI() {
+    if (mode !== 'match') return;
     const token = gameToken;
     aiThinking = true; updatePanel(); render();
     setTimeout(function () {
@@ -442,27 +737,60 @@
     playing = false; aiThinking = false;
     clearInterval(timerIv);
     tick();
-    const sub = '用时 ' + fmt(Date.now() - gameStart) + ' · 共 ' + history.length + ' 手';
+    const achBefore = new Set(Object.keys(career.ach));
+    session.games++;
+    const elapsed = Date.now() - gameStart;
+    const sub = '用时 ' + fmt(elapsed) + ' · 共 ' + history.length + ' 手';
+    const level = $('difficulty').value;
+    let resultTextStr, key, rankD = 0, coinD = 0;
+    const settled = [];
     if (winnerRole === 0) {
       scores.d++; streak = 0;
-      resultText.textContent = '和棋'; resultSub.textContent = sub;
-      sndDraw(); aiSay(pick(LINES.draw));
+      resultTextStr = '和棋'; key = 'draw';
+      rankD = 2; coinD = 4;
     } else if (winnerRole === playerColor) {
       scores.p++; streak++;
-      resultText.textContent = '你赢了'; resultSub.textContent = sub;
-      sndWin(); throwConfetti(); aiSay(pick(LINES.aiLose));
+      resultTextStr = '你赢了'; key = 'aiLose';
+      rankD = level === 'hard' ? 25 : (level === 'medium' ? 15 : 8);
+      coinD = level === 'hard' ? 30 : (level === 'medium' ? 18 : 10);
+      if (level === 'hard') session.beatHard = true;
+      if (history.length <= 30) session.fastWin = true;
+      throwConfetti();
     } else {
       scores.a++; streak = 0;
-      resultText.textContent = 'AI 胜'; resultSub.textContent = sub;
-      sndLose(); aiSay(pick(LINES.aiWin));
+      resultTextStr = 'AI 胜'; key = 'aiWin';
+      rankD = -5; coinD = 1;
     }
+    resultText.textContent = resultTextStr; resultSub.textContent = sub;
+    sndOnly(key);
+    aiSay(pick(LINES[key]));
+    const ranks = addRank(rankD);
+    addCoins(coinD);
+    settled.push({ t: '段位 ' + (rankD >= 0 ? '+' : '') + rankD, cls: rankD >= 0 ? '' : '' });
+    if (ranks.after > ranks.before) settled.push({ t: '晋升 ' + rankName(ranks.after), cls: 'promote' });
+    settled.push({ t: '金币 +' + coinD, cls: 'gold' });
+    $('settleRow').innerHTML = settled.map(s =>
+      '<span class="settle-chip ' + s.cls + '">' + s.t + '</span>').join('');
+    // 结算时可能顺带解锁的成就 → 展示在结算面板
+    checkAch();
+    const fresh = Object.keys(career.ach).filter(id => !achBefore.has(id))
+      .map(id => (ACH_DEFS.find(a => a[0] === id) || [])[1]);
+    $('resultAch').textContent = fresh.length ? '成就解锁 · ' + fresh.join('、') : '';
+
     saveScores(); saveStreak();
     setTimeout(function () { overlay.classList.add('show'); ensureLoop(); }, 500);
+    updatePanel();
+  }
+  function sndOnly(key) {
+    if (key === 'draw') sndDraw(); else if (key === 'aiLose') sndWin(); else sndLose();
   }
 
   function undo() {
+    if (mode !== 'match') return;
     const minHist = playerColor === G.WHITE ? 1 : 0;
     if (aiThinking || history.length <= minHist) return;
+    if (career.coins < COIN_COST.undo) { toast('金币不足 · 赢棋可赚金币'); return; }
+    addCoins(-COIN_COST.undo, '悔棋');
     while (history.length > minHist) {
       const m = history.pop();
       board[G.idx(m.x, m.y)] = G.EMPTY;
@@ -476,7 +804,10 @@
   }
 
   function hint() {
+    if (mode !== 'match') return;
     if (!(playing && !aiThinking && turn === playerColor)) return;
+    if (career.coins < COIN_COST.hint) { toast('金币不足 · 赢棋可赚金币'); return; }
+    addCoins(-COIN_COST.hint, '提示');
     const mv = G.bestMove(board, playerColor, $('difficulty').value);
     hintCell = mv; sndClick(); render();
     setTimeout(function () { hintCell = null; render(); }, 1800);
@@ -484,7 +815,7 @@
 
   function throwConfetti() {
     const box = $('confetti'); box.innerHTML = '';
-    const colors = ['#a63c2f', '#d4a017', '#2f6f4f', '#3b5b92', '#8a5fb0', '#c95d2c', '#f7f2e7'];
+    const colors = ['#a63c2f', '#c9962e', '#2f6f4f', '#3b5b92', '#8a5fb0', '#c95d2c', '#f7f2e7'];
     for (let i = 0; i < 60; i++) {
       const s = document.createElement('span');
       s.className = 'confetti';
@@ -498,33 +829,178 @@
     }
   }
 
+  /* ---------------- 残局挑战 ---------------- */
+  function renderPuzzleGrid() {
+    const grid = $('puzzleGrid');
+    grid.innerHTML = '';
+    let cleared = 0;
+    PUZZLES.forEach((p, i) => {
+      const stars = career.puzzles[p.id] || 0;
+      if (stars > 0) cleared++;
+      const b = document.createElement('button');
+      b.className = 'pz' + (stars > 0 ? ' done' : '') + (i === puzzleIndex ? ' active' : '');
+      b.innerHTML = String(i + 1) + '<div class="stars">' + '★'.repeat(stars) + '☆'.repeat(3 - stars) + '</div>';
+      b.addEventListener('click', () => enterPuzzle(i));
+      grid.appendChild(b);
+    });
+    $('puzzleHead').textContent = '共 ' + PUZZLES.length + ' 题，已破解 ' + cleared + ' 题。黑为图中●，白为○。';
+  }
+
+  function enterPuzzle(i) {
+    if (aiThinking) { toast('AI 思考中，稍候再试'); return; }
+    if (mode === 'match') {
+      matchSnapshot = {
+        board: board.slice(), history: history.slice(),
+        turn, playing, winCells: winCells ? winCells.slice() : null,
+        gameStart, playerColor, aiColor,
+      };
+      gameToken++;                      // 取消未决的 AI 思考
+      aiThinking = false;
+      clearInterval(timerIv);
+    }
+    mode = 'puzzle';
+    puzzleIndex = i;
+    puzzleSolved = false;
+    puzzlePlaced = null;
+    wrongMark = null;
+    const p = PUZZLES[i];
+    board = G.createBoard();
+    for (const [x, y, r] of p.stones) board[G.idx(x, y)] = r;
+    dropAnims.clear();
+    winCells = null; hintCell = null; hover = null;
+    puzzleStart = Date.now();
+    overlay.classList.remove('show');
+    $('confetti').innerHTML = '';
+    switchTab('puzzle');
+    updatePanel(); render();
+    renderPuzzleGrid();
+  }
+
+  function returnToMatch() {
+    if (!matchSnapshot) { newGame(); switchTab('match'); return; }
+    mode = 'match';
+    board = matchSnapshot.board;
+    history = matchSnapshot.history;
+    turn = matchSnapshot.turn;
+    playing = matchSnapshot.playing;
+    winCells = matchSnapshot.winCells;
+    playerColor = matchSnapshot.playerColor;
+    aiColor = matchSnapshot.aiColor;
+    gameStart = matchSnapshot.gameStart;
+    puzzleIndex = -1; puzzleSolved = false; puzzlePlaced = null; wrongMark = null;
+    dropAnims.clear();
+    overlay.classList.remove('show'); $('confetti').innerHTML = '';
+    clearInterval(timerIv); timerIv = setInterval(tick, 500); tick();
+    switchTab('match');
+    updatePanel(); render();
+    renderPuzzleGrid();
+    if (playing && turn === aiColor && !winCells) scheduleAI();
+  }
+
+  function puzzleTap(x, y) {
+    if (puzzleSolved) return;
+    const p = PUZZLES[puzzleIndex];
+    if (!p) return;
+    if (board[G.idx(x, y)] !== G.EMPTY) return;
+    if (x === p.answer[0] && y === p.answer[1]) {
+      puzzleSolved = true;
+      puzzlePlaced = { x, y };
+      board[G.idx(x, y)] = G.BLACK;
+      const elapsed = (Date.now() - puzzleStart) / 1000;
+      const stars = elapsed < 6 ? 3 : (elapsed < 15 ? 2 : 1);
+      const first = !career.puzzles[p.id];
+      const coins = first ? 8 + (stars === 3 ? 4 : (stars === 2 ? 2 : 0)) : 2;
+      career.puzzles[p.id] = Math.max(career.puzzles[p.id] || 0, stars);
+      saveCareer();
+      winCells = G.winLineAt(board, x, y);
+      sndWin();
+      try { navigator.vibrate && navigator.vibrate([15, 40, 15]); } catch (e) {}
+      throwConfetti();
+      aiSay(pick(LINES.puzzleOK));
+      addCoins(coins);
+      checkAch();
+      const roleTxt = p.type === 'win' ? '一步制胜' : '成功防守';
+      resultText.textContent = '破解成功';
+      resultSub.textContent = '第 ' + (puzzleIndex + 1) + ' 题 · ' + roleTxt +
+        ' · 用时 ' + elapsed.toFixed(1) + ' 秒 · ' + '★'.repeat(stars);
+      $('settleRow').innerHTML =
+        '<span class="settle-chip gold">金币 +' + coins + (first ? ' · 首破' : '') + '</span>' +
+        '<span class="settle-chip">' + '★'.repeat(stars) + '</span>';
+      $('resultAch').textContent = '';
+      $('againBtn').textContent = '下一题';
+      setTimeout(() => { overlay.classList.add('show'); ensureLoop(); }, 450);
+      renderPuzzleGrid();
+      render();
+    } else {
+      wrongMark = { x, y, t: performance.now() };
+      sndWrong();
+      try { navigator.vibrate && navigator.vibrate(40); } catch (e) {}
+      boardCard.classList.remove('shake');
+      void boardCard.offsetWidth;
+      boardCard.classList.add('shake');
+      aiSay(pick(LINES.puzzleBad));
+      ensureLoop();
+      setTimeout(() => { wrongMark = null; render(); }, 700);
+      render();
+    }
+  }
+
+  /* ---------------- 分享 ---------------- */
+  function shareResult() {
+    const idx = rankOf(career.rank);
+    const text = '我在「五子棋 · 连珠」的战绩：段位 ' + rankName(idx) +
+      '（' + career.rank + ' 分）· 连胜 ' + streak + ' 场 · 已破解 ' +
+      Object.keys(career.puzzles).length + '/' + PUZZLES.length + ' 道残局。来和我比比？';
+    if (navigator.share) {
+      navigator.share({ title: '五子棋 · 连珠', text }).catch(() => {});
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => toast('战绩已复制，去粘贴给朋友吧')).catch(() => toast(text));
+    } else {
+      toast(text.slice(0, 60) + '……');
+    }
+  }
+
   /* ---------------- 面板刷新 ---------------- */
   function updatePanel() {
-    const thinking = aiThinking;
+    const thinking = aiThinking && mode === 'match';
     $('turnRow').classList.toggle('thinking', thinking);
-    if (!playing) {
+    if (mode === 'puzzle') {
+      const p = PUZZLES[puzzleIndex];
+      statusText.textContent = '残局 · 第 ' + (puzzleIndex + 1) + ' 题';
+      subStatus.textContent = p ? p.desc : '';
+      turnDot.className = 'stone-dot black';
+      moveMeta.textContent = puzzleSolved ? '已破解' : ('用时 ' + ((Date.now() - puzzleStart) / 1000).toFixed(0) + ' 秒');
+      $('undoBtn').disabled = true;
+      $('hintBtn').disabled = true;
+    } else if (!playing) {
       const won = winCells && board[G.idx(winCells[0])] === playerColor;
       statusText.textContent = won ? '你赢了' : (winCells ? 'AI 获胜' : '和棋');
       subStatus.textContent = '点击「再来一局」继续';
       turnDot.className = 'stone-dot ' + (winCells ? (board[G.idx(winCells[0])] === G.BLACK ? 'black' : 'white') : 'black');
+      $('undoBtn').disabled = true;
+      $('hintBtn').disabled = true;
     } else if (thinking) {
       statusText.textContent = 'AI 思考中';
       subStatus.textContent = '评估局面……';
       turnDot.className = 'stone-dot ' + (aiColor === G.BLACK ? 'black' : 'white');
+      $('undoBtn').disabled = true;
+      $('hintBtn').disabled = true;
     } else {
       statusText.textContent = '轮到你了';
       subStatus.textContent = '执' + (playerColor === G.BLACK ? '黑先行' : '白后手') + '，点击交叉点落子';
       turnDot.className = 'stone-dot ' + (playerColor === G.BLACK ? 'black' : 'white');
+      const minHist = playerColor === G.WHITE ? 1 : 0;
+      $('undoBtn').disabled = history.length <= minHist || career.coins < COIN_COST.undo;
+      $('hintBtn').disabled = turn !== playerColor || career.coins < COIN_COST.hint;
     }
     tick();
-    $('undoBtn').disabled = aiThinking || history.length <= (playerColor === G.WHITE ? 1 : 0);
-    $('hintBtn').disabled = !(playing && !aiThinking && turn === playerColor);
     $('scoreP').textContent = scores.p;
     $('scoreA').textContent = scores.a;
     $('scoreD').textContent = scores.d;
     const st = $('streakRow');
     if (streak >= 2) { st.style.display = 'inline-block'; st.textContent = '连胜 ' + streak + ' 场'; }
     else st.style.display = 'none';
+    updateCareerPanel();
   }
 
   /* ---------------- 绘制 ---------------- */
@@ -561,8 +1037,14 @@
       ctx.fillText(COLS[i], PAD + i * CELL, W - PAD + 21);
       ctx.fillText(String(SIZE - i), PAD - 21, PAD + i * CELL);
     }
-    for (const m of history) drawStone(m.x, m.y, m.role, 1);
-    if (history.length && !winCells) {
+    // 棋子：对弈=history；残局=题面 + 已落答案子
+    const stones = mode === 'puzzle'
+      ? (PUZZLES[puzzleIndex] ? PUZZLES[puzzleIndex].stones.slice() : [])
+      : history.map(m => [m.x, m.y, m.role]);
+    if (mode === 'puzzle' && puzzlePlaced) stones.push([puzzlePlaced.x, puzzlePlaced.y, G.BLACK]);
+    for (const [x, y, role] of stones) drawStone(x, y, role, 1);
+    // 最后一手标记（仅对弈）
+    if (mode === 'match' && history.length && !winCells) {
       const m = history[history.length - 1];
       if (!dropAnims.has(G.idx(m.x, m.y))) {
         const cx = PAD + m.x * CELL, cy = PAD + m.y * CELL;
@@ -571,6 +1053,7 @@
         ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.stroke();
       }
     }
+    // 获胜连线
     if (winCells) {
       const pts = winCells.map(i => ({ x: i % SIZE, y: (i / SIZE) | 0 }))
                           .sort((a, b) => (a.x - b.x) || (a.y - b.y));
@@ -590,15 +1073,28 @@
       }
       ctx.restore();
     }
-    if (hover && playing && !aiThinking && turn === playerColor && board[G.idx(hover.x, hover.y)] === G.EMPTY) {
+    // 悬停预览（对弈模式）
+    if (mode === 'match' && hover && playing && !aiThinking && turn === playerColor && board[G.idx(hover.x, hover.y)] === G.EMPTY) {
       drawStone(hover.x, hover.y, playerColor, 0.38);
     }
+    // 提示标记
     if (hintCell) {
       const cx = PAD + hintCell.x * CELL, cy = PAD + hintCell.y * CELL;
       ctx.save();
       ctx.strokeStyle = '#2f6f4f'; ctx.lineWidth = 3.5;
       ctx.shadowColor = 'rgba(47,111,79,.8)'; ctx.shadowBlur = 10;
       ctx.beginPath(); ctx.arc(cx, cy, CELL * .42, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+    // 残局错点标记
+    if (wrongMark) {
+      const cx = PAD + wrongMark.x * CELL, cy = PAD + wrongMark.y * CELL, r = CELL * .3;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(166,60,47,.9)'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cx - r, cy - r); ctx.lineTo(cx + r, cy + r);
+      ctx.moveTo(cx + r, cy - r); ctx.lineTo(cx - r, cy + r);
+      ctx.stroke();
       ctx.restore();
     }
     ctx.restore();
@@ -649,6 +1145,24 @@
     })();
   }
 
+  /* ---------------- 标签页 ---------------- */
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    $('tab-match').hidden = name !== 'match';
+    $('tab-puzzle').hidden = name !== 'puzzle';
+    $('tab-ach').hidden = name !== 'ach';
+    if (name === 'puzzle') renderPuzzleGrid();
+    if (name === 'ach') renderAch();
+  }
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      if (t.dataset.tab === 'puzzle' && aiThinking) { toast('AI 思考中，稍候再试'); return; }
+      if (t.dataset.tab === 'match' && mode === 'puzzle') { sndClick(); returnToMatch(); return; }
+      sndClick();
+      switchTab(t.dataset.tab);
+    });
+  });
+
   /* ---------------- 输入 ---------------- */
   function eventToCell(e) {
     const r = cv.getBoundingClientRect();
@@ -660,15 +1174,26 @@
     if (Math.hypot(px - (PAD + x * CELL), py - (PAD + y * CELL)) > CELL * 0.48) return null;
     return { x, y };
   }
+  const boardCard = $('boardCard');
   cv.addEventListener('click', e => { const c = eventToCell(e); if (c) playerMove(c.x, c.y); });
   cv.addEventListener('mousemove', e => {
+    if (mode !== 'match') return;
     const c = eventToCell(e);
     if ((c && (!hover || hover.x !== c.x || hover.y !== c.y)) || (!c && hover)) { hover = c; render(); }
   });
   cv.addEventListener('mouseleave', () => { if (hover) { hover = null; render(); } });
 
   $('newBtn').addEventListener('click', () => { sndClick(); newGame(); });
-  $('againBtn').addEventListener('click', () => { sndClick(); newGame(); });
+  $('againBtn').addEventListener('click', () => {
+    sndClick();
+    if (mode === 'puzzle') {
+      const next = (puzzleIndex + 1) % PUZZLES.length;
+      enterPuzzle(next);
+    } else {
+      newGame();
+    }
+  });
+  $('shareBtn').addEventListener('click', shareResult);
   $('undoBtn').addEventListener('click', undo);
   $('hintBtn').addEventListener('click', hint);
   $('soundBtn').addEventListener('click', () => {
@@ -685,13 +1210,16 @@
 
   // 调试 / 自动化测试钩子
   window.__wuziqi = {
-    state: () => ({ playing, aiThinking, turn, playerColor, aiColor, moves: history.length }),
+    state: () => ({
+      playing, aiThinking, turn, playerColor, aiColor, moves: history.length,
+      mode, puzzleIndex, coins: career.coins, rank: career.rank, streak,
+    }),
     playerMove,
     autoplay(level) {
       const out = { done: false };
       this.autoplayResult = out;
       const timer = setInterval(() => {
-        if (!playing) {
+        if (mode !== 'match' || !playing) {
           clearInterval(timer);
           out.done = true;
           out.moves = history.length;
@@ -710,16 +1238,24 @@
       celebrate() {
         resultText.textContent = '你赢了';
         resultSub.textContent = '特效预览';
+        $('settleRow').innerHTML = '<span class="settle-chip">段位 +15</span><span class="settle-chip gold">金币 +18</span>';
         throwConfetti(); sndWin();
         overlay.classList.add('show'); ensureLoop();
       },
       say(t) { aiSay(t || '你好，我是五子棋 AI。'); },
-      stone() { sndStone(true); setTimeout(() => sndStone(false), 350); },
+      toast(t) { toast(t || '测试提示'); },
+      puzzle(i) { enterPuzzle(i); },
     },
   };
 
+  /* ---------------- 启动 ---------------- */
   newGame();
+  updateCareerPanel();
+  renderPuzzleGrid();
+  renderAch();
+  checkAch();
 })();
 </script>
 </body>
 </html>
+
