@@ -5,3 +5,7 @@
 # 系统文件
 Thumbs.db
 Desktop.ini
+
+# 临时文件
+.tmp-*
+m[1])
