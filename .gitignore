@@ -1,0 +1,7 @@
+# ZCode Sites 部署产物
+.zcode-site/
+.zcode-site.json
+
+# 系统文件
+Thumbs.db
+Desktop.ini
