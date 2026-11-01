@@ -4,65 +4,48 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>五子棋 · 人机对弈</title>
-<meta name="description" content="纯前端五子棋：模式识别 + α-β 剪枝 AI，段位晋升、金币经济、24 道残局挑战与成就系统。">
+<meta name="description" content="纯前端五子棋：模式识别 + α-β 剪枝 AI，24 道残局练习与对局复盘，零运行时依赖。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23a63c2f'/%3E%3Ctext x='16' y='23' font-size='18' text-anchor='middle' fill='%23f3ede1' font-family='serif'%3E弈%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <!--
-  页面结构总览
-  ┌ header   品牌栏（印章字标 + 版本信息）
+  页面结构
+  ┌ header   品牌栏
   ├ main
   │  ├ board-card    Canvas 棋盘 + 结算遮罩
-  │  └ panel         侧栏（生涯行 / 标签页：对弈·残局·成就 / 说明）
+  │  └ panel         侧栏（标签页：对弈 / 残局）
   ├ footer
   ├ #toasts         全局通知
-  └ #intro          开场标题画面（首屏，点击开始后淡出）
-  样式见 css/style.css，逻辑见 js/app.js（引擎 game.js、题库 puzzles.js）
+  └ #intro          开场画面
+  样式 css/style.css · 逻辑 js/app.js · 引擎 game.js · 题库 puzzles.js
 -->
 <header>
   <div class="seal-mark serif">弈</div>
   <h1 class="serif">五子棋</h1>
   <div class="tagline">人机对弈</div>
-  <div class="meta">连珠引擎 v4.0<br>残局 · 段位 · 成就</div>
+  <div class="meta">连珠引擎 v5.0<br>残局 · 复盘 · 快捷键</div>
 </header>
 
 <main>
-  <!-- 棋盘：所有对弈/残局/复盘画面都由 Canvas 绘制 -->
   <div class="board-card" id="boardCard">
     <canvas id="board" width="640" height="640"></canvas>
 
-    <!-- 结算/破解成功遮罩 -->
     <div class="overlay" id="overlay">
       <div id="confetti"></div>
       <div class="result serif" id="resultText"></div>
       <div id="resultSub"></div>
-      <div class="settle-row" id="settleRow"></div>
-      <div id="resultAch"></div>
       <div class="btn-row2">
         <button class="btn primary" id="againBtn">再来一局</button>
         <button class="btn ghost" id="replayBtn">复盘</button>
-        <button class="btn ghost" id="shareBtn">分享战绩</button>
       </div>
     </div>
   </div>
 
   <aside class="panel">
-    <!-- 生涯行：段位徽章 + 晋级进度 + 金币 -->
-    <div class="career-row">
-      <div class="rank-badge" id="rankBadge">青铜</div>
-      <div class="rank-mid">
-        <div class="bar"><i id="rankBar" style="width:0%"></i></div>
-        <div class="bar-text" id="rankText">0 / 100</div>
-      </div>
-      <div class="coin-chip" id="coinChip">金币 0</div>
-    </div>
-
-    <!-- 主标签页 -->
     <div class="tabs">
       <div class="tab active" data-tab="match">对 弈</div>
       <div class="tab" data-tab="puzzle">残 局</div>
-      <div class="tab" data-tab="ach">成 就</div>
     </div>
 
     <!-- 标签：对弈 -->
@@ -110,8 +93,8 @@
         </div>
         <div class="btn-row">
           <button class="btn primary" id="newBtn">新对局</button>
-          <button class="btn" id="undoBtn">悔棋 <small>· 3 金币</small></button>
-          <button class="btn" id="hintBtn">提示 <small>· 5 金币</small></button>
+          <button class="btn" id="undoBtn">悔棋</button>
+          <button class="btn" id="hintBtn">提示</button>
           <button class="btn" id="soundBtn">音效 · 开</button>
         </div>
       </section>
@@ -132,29 +115,15 @@
       </section>
     </div>
 
-    <!-- 标签：残局挑战 -->
+    <!-- 标签：残局练习 -->
     <div id="tab-puzzle" hidden>
       <section>
-        <h2>残局挑战</h2>
-        <div class="daily-banner" id="dailyBanner"></div>
+        <h2>残局练习</h2>
         <div class="puzzle-head" id="puzzleHead"></div>
         <div class="puzzle-grid" id="puzzleGrid"></div>
         <div class="puzzle-head" style="margin-top:12px">
-          三星标准：6 秒内破解 · 两星：15 秒内 · 一星：完成即得<br>
-          首次破解可得金币，每日残局首破奖励翻倍。
+          三星标准：6 秒内破解 · 两星：15 秒内 · 一星：完成即得
         </div>
-      </section>
-    </div>
-
-    <!-- 标签：成就与生涯统计 -->
-    <div id="tab-ach" hidden>
-      <section>
-        <h2>成 就</h2>
-        <div class="ach-list" id="achList"></div>
-      </section>
-      <section>
-        <h2>生涯统计</h2>
-        <div class="stats-grid" id="statsGrid"></div>
       </section>
     </div>
 
@@ -162,7 +131,7 @@
 
     <section class="help">
       <h2>说 明</h2>
-      双方轮流落子，先连成<b>五子</b>者胜。胜局提升段位与金币，提示与悔棋消耗金币。<br>
+      双方轮流落子，先连成<b>五子</b>者胜。<br>
       快捷键：<b>N</b> 新对局 · <b>U</b> 悔棋 · <b>H</b> 提示 · <b>M</b> 音效 · <b>R</b> 复盘 · <b>←→</b> 回放
     </section>
   </aside>
@@ -170,23 +139,22 @@
 
 <footer>
   <span>手工作品 · 无框架 · 零运行时依赖 · 数据仅存本机</span>
-  <span class="sig">连珠 v4.1 · build 2026-11-02 · 用心下好每一步棋</span>
+  <span class="sig">连珠 v5.0 · build 2026-11-02 · 用心下好每一步棋</span>
 </footer>
 
 <div id="toasts"></div>
 
-<!-- 开场标题画面（js/app.js 注入漂浮棋子装饰） -->
 <div id="intro">
   <div class="i-seal serif">弈</div>
   <h2 class="serif">五子棋</h2>
   <div class="i-tag">连珠 · 人机对弈</div>
   <div class="i-feats">
     <span class="i-feat">24 道残局</span>
-    <span class="i-feat">段位之路</span>
-    <span class="i-feat">每日签到</span>
+    <span class="i-feat">对局复盘</span>
+    <span class="i-feat">三档棋力</span>
   </div>
   <button class="i-start" id="introStart">开始对弈</button>
-  <div class="i-tip">提示与悔棋消耗金币 · 赢棋即可赚回</div>
+  <div class="i-tip">按空格键也可以开始</div>
 </div>
 
 <script src="game.js"></script>
