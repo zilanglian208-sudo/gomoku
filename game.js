@@ -224,6 +224,10 @@
 
   function centerBias(x, y) { return (26 - Math.abs(x - 7) - Math.abs(y - 7)) * 3; }
 
+  // 随机源（默认 Math.random；测试可注入固定种子的伪随机函数以复现结果）
+  let rng = Math.random;
+  function setRandom(fn) { rng = fn || Math.random; }
+
   function bestOf(arr, key) {
     if (!arr.length) return null;
     let b = arr[0];
@@ -289,7 +293,7 @@
       // 入门难度：在前 3 名中加权随机，走子更随性
       const pool = info.slice(0, Math.min(3, info.length));
       const w = [0.62, 0.25, 0.13];
-      let r = Math.random(), acc = 0;
+      let r = rng(), acc = 0;
       for (let i = 0; i < pool.length; i++) { acc += w[i]; if (r <= acc) return pool[i]; }
     }
     return info[0];
@@ -300,6 +304,6 @@
     createBoard, idx,
     winLineAt, winAtIdx,
     analyzePoint, genMoves, boardEval,
-    bestMove,
+    bestMove, setRandom,
   };
 });

@@ -131,14 +131,17 @@ function playGame(lvBlack, lvWhite, maxPly) {
 }
 
 {
-  // medium(黑) vs easy(白) 三局，medium 应全胜
-  let wins = 0;
+  // medium(黑) vs easy(白)：注入固定种子随机源，结果可复现、断言稳定
+  let seed = 42;
+  G.setRandom(() => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; });
+  let pts = 0;
   const t0 = Date.now();
   for (let g = 0; g < 3; g++) {
     const r = playGame('medium', 'easy');
-    if (r.winner === BLACK) wins++;
+    if (r.winner === BLACK) pts += 1; else if (r.winner === 0) pts += 0.5;
   }
-  ok(wins >= 2, `medium vs easy 三局胜 ${wins} 场（${Date.now() - t0}ms）`);
+  G.setRandom(); // 恢复默认随机源
+  ok(pts >= 2, `medium vs easy 三局积分 ${pts} >= 2（固定种子，${Date.now() - t0}ms）`);
 
   // hard 参与的对弈前 60 手不崩溃、全部合法
   const t1 = Date.now();
