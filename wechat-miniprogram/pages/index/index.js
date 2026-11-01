@@ -12,13 +12,13 @@ const DIFF_NAMES = ['简单 · 入门', '中等 · 进阶', '困难 · 高手'];
 const FIRST_NAMES = ['我执黑先行', 'AI 执黑先行'];
 
 const LINES = {
-  blockFive: ['好险！差点让你连成五子！', '就想料到你会走这', '堵住啦，没门~'],
-  aiFour: ['吃我一招！', '看这手！', '胜利在望~', '我的攻势开始了'],
-  playerFour: ['呀，大意了…', '你这手够狠！', '得小心你的三连了'],
-  aiThree: ['步步为营~', '悄悄布局中…', '看好了'],
-  aiWin: ['承让承让~', '我赢啦！再来一局？', '嘿嘿，棋高一着'],
-  aiLose: ['棋差一着，佩服佩服！', '你赢了，厉害！', '这局算你的，下局我认真的'],
-  draw: ['势均力敌，平分秋色~', '不打不相识，再来？'],
+  blockFive: ['好险，差点让你连成五子。', '就想料到你会走这。', '堵住了，没那么容易。'],
+  aiFour: ['看这一手。', '攻势开始了。', '胜利在望。'],
+  playerFour: ['大意了……', '这手够狠。', '得提防你的三连了。'],
+  aiThree: ['步步为营。', '悄悄布局中。', '看好了。'],
+  aiWin: ['承让。', '我赢了，再来一局？', '棋高一着。'],
+  aiLose: ['棋差一着，佩服。', '你赢了，厉害。', '这局算你的，下局我认真下。'],
+  draw: ['势均力敌，平分秋色。', '不打不相识，再来一局？'],
 };
 
 function fmt(ms) {
@@ -31,9 +31,9 @@ Page({
   data: {
     boardPx: 320,
     // 面板状态
-    statusText: '你的回合',
-    subStatus: '点击棋盘任意交叉点落子',
-    timeText: '⏱ 00:00 · 第 0 手',
+    statusText: '轮到你了',
+    subStatus: '执黑先行，点击交叉点落子',
+    timeText: '第 0 手 · 00:00',
     bubble: '', bubbleShow: false,
     turnBlack: true, thinking: false,
     showOver: false, resultText: '', resultSub: '', confetti: [],
@@ -142,7 +142,7 @@ Page({
       if (!this.dropAnims.has(G.idx(m.x, m.y))) {
         const cx = PAD + m.x * CELL, cy = PAD + m.y * CELL;
         ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#e64338'; ctx.fill();
+        ctx.fillStyle = '#c0392b'; ctx.fill();
         ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.stroke();
       }
     }
@@ -153,9 +153,9 @@ Page({
       const p0 = pts[0], p1 = pts[pts.length - 1];
       const a = 0.55 + 0.35 * Math.sin(this.pulse);
       ctx.save();
-      ctx.strokeStyle = 'rgba(230,67,56,' + a.toFixed(3) + ')';
+      ctx.strokeStyle = 'rgba(166,60,47,' + a.toFixed(3) + ')';
       ctx.lineWidth = 7; ctx.lineCap = 'round';
-      ctx.shadowColor = 'rgba(230,67,56,.9)'; ctx.shadowBlur = 14;
+      ctx.shadowColor = 'rgba(166,60,47,.9)'; ctx.shadowBlur = 14;
       ctx.beginPath();
       ctx.moveTo(PAD + p0.x * CELL, PAD + p0.y * CELL);
       ctx.lineTo(PAD + p1.x * CELL, PAD + p1.y * CELL);
@@ -170,8 +170,8 @@ Page({
     if (this.hintCell) {
       const cx = PAD + this.hintCell.x * CELL, cy = PAD + this.hintCell.y * CELL;
       ctx.save();
-      ctx.strokeStyle = '#2f9e44'; ctx.lineWidth = 3.5;
-      ctx.shadowColor = 'rgba(47,158,68,.8)'; ctx.shadowBlur = 10;
+      ctx.strokeStyle = '#2f6f4f'; ctx.lineWidth = 3.5;
+      ctx.shadowColor = 'rgba(47,111,79,.8)'; ctx.shadowBlur = 10;
       ctx.beginPath(); ctx.arc(cx, cy, CELL * .42, 0, Math.PI * 2); ctx.stroke();
       ctx.restore();
     }
@@ -249,7 +249,7 @@ Page({
   /* ---------------- 对局流程 ---------------- */
   tick() {
     if (this.playing) {
-      this.setData({ timeText: '⏱ ' + fmt(Date.now() - this.gameStart) + ' · 第 ' + this.history.length + ' 手' });
+      this.setData({ timeText: '第 ' + this.history.length + ' 手 · ' + fmt(Date.now() - this.gameStart) });
     }
   },
 
@@ -265,16 +265,16 @@ Page({
     let statusText, subStatus, turnBlack;
     if (!this.playing) {
       const won = this.winCells && this.board[this.winCells[0]] === this.playerColor;
-      statusText = won ? '你赢了' : (this.winCells ? 'AI 获胜' : '平局');
-      subStatus = '点击「再来一局」继续挑战';
+      statusText = won ? '你赢了' : (this.winCells ? 'AI 获胜' : '和棋');
+      subStatus = '点击「再来一局」继续';
       turnBlack = this.winCells ? this.board[this.winCells[0]] === G.BLACK : true;
     } else if (thinking) {
-      statusText = 'AI 正在思考';
-      subStatus = '深度评估局面中…';
+      statusText = 'AI 思考中';
+      subStatus = '评估局面……';
       turnBlack = this.aiColor === G.BLACK;
     } else {
-      statusText = '你的回合';
-      subStatus = '你执' + (this.playerColor === G.BLACK ? '黑' : '白') + '，点击交叉点落子';
+      statusText = '轮到你了';
+      subStatus = '执' + (this.playerColor === G.BLACK ? '黑先行' : '白后手') + '，点击交叉点落子';
       turnBlack = this.playerColor === G.BLACK;
     }
     const minHist = this.playerColor === G.WHITE ? 1 : 0;
@@ -339,18 +339,18 @@ Page({
     let resultText, key;
     if (winnerRole === 0) {
       this.scores.d++; this.streak = 0;
-      resultText = '🤝 平局'; key = 'draw';
+      resultText = '和棋'; key = 'draw';
     } else if (winnerRole === this.playerColor) {
       this.scores.p++; this.streak++;
-      resultText = '🎉 恭喜，你赢了！'; key = 'aiLose';
+      resultText = '你赢了'; key = 'aiLose';
       this.throwConfetti();
     } else {
       this.scores.a++; this.streak = 0;
-      resultText = '🤖 AI 获胜'; key = 'aiWin';
+      resultText = 'AI 胜'; key = 'aiWin';
     }
     this.setData({
       resultText, resultSub: sub, showOver: false,
-      timeText: '⏱ ' + fmt(elapsed) + ' · 第 ' + this.history.length + ' 手',
+      timeText: '第 ' + this.history.length + ' 手 · ' + fmt(elapsed),
     });
     this.playSound(key);
     this.say(pick(LINES[key]));
@@ -363,7 +363,7 @@ Page({
   },
 
   throwConfetti() {
-    const colors = ['#e64340', '#f5b942', '#2f9e44', '#4dabf7', '#b197fc', '#ff922b', '#f783ac'];
+    const colors = ['#a63c2f', '#d4a017', '#2f6f4f', '#3b5b92', '#8a5fb0', '#c95d2c', '#f7f2e7'];
     const confetti = [];
     for (let i = 0; i < 60; i++) {
       confetti.push(
