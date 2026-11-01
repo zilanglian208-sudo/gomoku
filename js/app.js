@@ -332,6 +332,12 @@
 
     const elapsed = Date.now() - gameStart;
     const sub = '用时 ' + fmt(elapsed) + ' · 共 ' + history.length + ' 手';
+    // 结算副语：随机的、像人写的短评（游戏『人味』的一部分）
+    const FLAVOR = {
+      aiLose: ['干净利落。', 'AI 复盘去了。', '教科书式对局。', '这就是实力。'],
+      aiWin: ['这局是学习。', 'AI 有点东西。', '复盘找找问题。', '下局翻盘。'],
+      draw: ['不分伯仲。', '和棋，各自保留意见。', '势均力敌的一局。'],
+    };
     const level = $('difficulty').value;
     let resultStr, key, rankD, coinD;
     const settled = [];
@@ -362,7 +368,18 @@
     career.stats.coinsEarned += coinD;
 
     resultText.textContent = resultStr;
-    resultSub.textContent = sub;
+    resultSub.textContent = sub + ' · ' + pick(FLAVOR[key]);
+    // 终局 juice：胜利白闪 + 重震（失败轻震），连胜里程碑弹浮字
+    if (winnerRole === playerColor) {
+      boardCard.classList.remove('flash'); void boardCard.offsetWidth;
+      boardCard.classList.add('flash', 'shake-hard');
+      streakCallout(streak);
+      setTimeout(() => boardCard.classList.remove('flash', 'shake-hard'), 900);
+    } else if (winnerRole !== 0) {
+      boardCard.classList.remove('shake'); void boardCard.offsetWidth;
+      boardCard.classList.add('shake');
+      setTimeout(() => boardCard.classList.remove('shake'), 600);
+    }
     if (key === 'draw') sndDraw(); else if (key === 'aiLose') sndWin(); else sndLose();
     aiSay(pick(LINES[key]));
 
@@ -990,13 +1007,50 @@
     if ((c && (!hover || hover.x !== c.x || hover.y !== c.y)) || (!c && hover)) { hover = c; render(); }
   });
   cv.addEventListener('mouseleave', () => { if (hover) { hover = null; render(); } });
-  // 复盘键盘支持
+  // 键盘快捷键 —— 独立开发者给游戏配键盘操作的惯例
+  //   N 新对局 · U 悔棋 · H 提示 · M 音效 · R 复盘(终局) · ←/→ 复盘 · Esc 退出 · 空格 关闭开场
   document.addEventListener('keydown', e => {
-    if (mode !== 'replay') return;
-    if (e.key === 'ArrowLeft') replayStep(-1);
-    if (e.key === 'ArrowRight') replayStep(1);
-    if (e.key === 'Escape') exitReplay();
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    // 开场画面：空格或回车开始
+    if (!$('intro').classList.contains('hide')) {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        $('introStart').click();
+      }
+      return;
+    }
+    // 复盘模式专属
+    if (mode === 'replay') {
+      if (e.key === 'ArrowLeft') replayStep(-1);
+      if (e.key === 'ArrowRight') replayStep(1);
+      if (e.key === 'Escape') exitReplay();
+      return;
+    }
+    switch (e.key.toLowerCase()) {
+      case 'n': sndClick(); newGame(); break;
+      case 'u': undo(); break;
+      case 'h': hint(); break;
+      case 'm': $('soundBtn').click(); break;
+      case 'r': if (!playing && mode === 'match' && history.length) { sndClick(); enterReplay(); } break;
+      default: return;
+    }
+    e.preventDefault();
   });
+
+  // 连胜里程碑浮字：贴着棋盘弹起飘散（游戏 juice 的一部分）
+  const STREAK_CALLOUTS = { 2: '手感来了', 3: '三连胜', 5: '五连胜 · 无人能挡', 8: '杀疯了' };
+  function streakCallout(n) {
+    const text = STREAK_CALLOUTS[n] || (n > 8 ? STREAK_CALLOUTS[8] : null);
+    if (!text) return;
+    const c = document.createElement('div');
+    c.className = 'callout serif';
+    c.textContent = text;
+    boardCard.appendChild(c);
+    setTimeout(() => c.remove(), 1500);
+  }
 
   $('newBtn').addEventListener('click', () => { sndClick(); newGame(); });
   $('againBtn').addEventListener('click', () => {
