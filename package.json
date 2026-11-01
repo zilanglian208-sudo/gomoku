@@ -1,6 +1,6 @@
 {
   "name": "gomoku-renju",
-  "version": "4.0.0",
+  "version": "6.0.0",
   "description": "纯前端五子棋：模式识别 + α-β 剪枝 AI，段位/金币/残局挑战/成就系统，零运行时依赖",
   "main": "game.js",
   "scripts": {

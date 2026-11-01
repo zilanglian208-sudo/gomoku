@@ -140,6 +140,141 @@ canvas {
 .tab.active { color: var(--seal); font-weight: 700; border-bottom-color: var(--seal); }
 
 /* ============ 6. 对弈区 ============ */
+/* ---- 6.1 对手桌宠：大肥鱼 ----
+   部件化 SVG：尾巴/背鳍/侧鳍/眼睑/眉/嘴(5 套)/腮红/汗滴/泪/火花/呼噜。
+   data-mood 驱动表情状态机：idle thinking smug surprised happy sad angry sleep
+   设计要点：情绪差异用「眉角 + 嘴形 + 眼睑 + 特效件 + 摆尾速度」五通道表达，
+   任何一个状态都不会只改一个部件，保证表情读得出来。 */
+.status-block { padding: 16px 0 14px; }
+.opponent-row { display: flex; align-items: flex-end; gap: 12px; }
+.fish-wrap {
+  position: relative; width: 148px; flex: none;
+  cursor: pointer; margin-bottom: -6px;
+}
+.fish-svg { display: block; width: 100%; overflow: visible; }
+.status-col { flex: 1; min-width: 0; padding-bottom: 6px; }
+.fish-bubble {
+  position: absolute; bottom: calc(100% - 4px); left: 6px; right: -16px;
+  background: #fffdf6; border: 1px solid var(--hairline);
+  border-radius: 8px; padding: 7px 10px;
+  font-size: 12.5px; color: var(--ink-soft); line-height: 1.5;
+  box-shadow: 0 3px 10px rgba(60,45,25,.12);
+  opacity: 0; transform: translateY(6px) scale(.92); transform-origin: bottom left;
+  transition: opacity .25s, transform .25s;
+  z-index: 5; pointer-events: none;
+}
+.fish-bubble::after {
+  content: ""; position: absolute; bottom: -6px; left: 26px;
+  border: 6px solid transparent; border-top-color: #fffdf6;
+  filter: drop-shadow(0 1px 0 var(--hairline));
+}
+.fish-bubble.show { opacity: 1; transform: translateY(0) scale(1); }
+
+/* 整体呼吸浮动 */
+.f-bob { animation: fBob 3.2s ease-in-out infinite; transform-origin: 100px 96px; }
+@keyframes fBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+/* 尾巴：idle 慢摆 */
+.f-tail { transform-origin: 166px 96px; animation: fTail 1.6s ease-in-out infinite alternate; }
+@keyframes fTail { from { transform: rotate(10deg); } to { transform: rotate(-14deg); } }
+/* 侧鳍拍水 */
+.f-fin { transform-origin: 84px 122px; animation: fFin 2.4s ease-in-out infinite alternate; }
+@keyframes fFin { from { transform: rotate(6deg); } to { transform: rotate(-14deg); } }
+
+/* 部件默认态 */
+.f-brow { fill: none; stroke: #143c5c; stroke-width: 4; stroke-linecap: round; }
+.f-sclera { fill: #fff; stroke: #143c5c; stroke-width: 2; }
+/* 瞳孔跟随鼠标（--px/--py 由 JS 写入；情绪态的 transform 会覆盖它） */
+.f-pupil-g { transform: translate(var(--px, 0px), var(--py, 0px)); transition: transform .18s ease-out; }
+.f-pupil { fill: #143c5c; }
+.f-glint { fill: #fff; }
+.f-lid { fill: #2f95d0; stroke: #143c5c; stroke-width: 2; transform: scaleY(0); transform-origin: 66px 66px; }
+.f-mouth { fill: none; stroke: #143c5c; stroke-width: 3.5; stroke-linecap: round; display: none; }
+.m-grin, .m-open { fill: #7c2d3e; stroke: #143c5c; }
+.f-blush { fill: rgba(255,120,130,.55); opacity: .55; }
+.f-spot { fill: rgba(255,255,255,.35); }
+.f-sweat { fill: #9fd9f7; opacity: 0; }
+.f-tear { fill: #9fd9f7; opacity: 0; }
+.f-sparkle { fill: #ffd45e; opacity: 0; }
+.f-zzz text { fill: var(--ink-faint); font-weight: 700; opacity: 0; }
+.f-shadow { fill: rgba(60,45,25,.18); }
+
+/* 眨眼（JS 周期性加 .blink） */
+.fish-wrap.blink .f-lid { animation: fLid .22s ease; }
+@keyframes fLid { 0%,100% { transform: scaleY(0); } 45% { transform: scaleY(1); } }
+
+/* ---- 状态：thinking（思考）——眯眼望天、尾速加快、挂汗滴 ---- */
+.fish-wrap[data-mood="thinking"] .f-tail { animation-duration: .5s; }
+.fish-wrap[data-mood="thinking"] .f-pupil-g { transform: translate(4px, -4px); }
+.fish-wrap[data-mood="thinking"] .f-lid { transform: scaleY(.45); transform-origin: 66px 66px; }
+.fish-wrap[data-mood="thinking"] .f-sweat { opacity: 1; animation: fDrop 1.2s ease-in infinite; }
+@keyframes fDrop { 0% { transform: translateY(-2px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(14px); opacity: 0; } }
+.fish-wrap[data-mood="thinking"] .m-smile { display: block; }
+
+/* ---- 状态：smug（得意，下出好棋）——半闭眼笑、火花 ---- */
+.fish-wrap[data-mood="smug"] .f-lid { transform: scaleY(.62) translateY(-6px); transform-origin: 66px 66px; }
+.fish-wrap[data-mood="smug"] .m-grin { display: block; }
+.fish-wrap[data-mood="smug"] .m-smile { display: none; }
+.fish-wrap[data-mood="smug"] .f-blush { opacity: .8; }
+.fish-wrap[data-mood="smug"] .f-sparkle { opacity: 1; animation: fSpark 1s ease-in-out infinite alternate; }
+@keyframes fSpark { from { transform: scale(.8); opacity: .6; } to { transform: scale(1.15); opacity: 1; } }
+.fish-wrap[data-mood="smug"] .f-tail { animation-duration: .7s; }
+
+/* ---- 状态：surprised（吃惊，你成四了）——瞪圆眼、O 嘴、冒汗 ---- */
+.fish-wrap[data-mood="surprised"] .f-sclera { transform: scale(1.12); transform-origin: 66px 82px; }
+.fish-wrap[data-mood="surprised"] .f-pupil-g { transform: scale(.72); transform-origin: 66px 85px; }
+.fish-wrap[data-mood="surprised"] .m-open { display: block; }
+.fish-wrap[data-mood="surprised"] .m-smile { display: none; }
+.fish-wrap[data-mood="surprised"] .f-brow { transform: translateY(-5px); transform-origin: 66px 58px; }
+.fish-wrap[data-mood="surprised"] .f-sweat { opacity: 1; }
+.fish-wrap[data-mood="surprised"] .f-tail { animation-duration: .35s; }
+
+/* ---- 状态：happy（AI 赢了）——弹跳大笑、腮红满格、火花 ---- */
+.fish-wrap[data-mood="happy"] .f-bob { animation: fHappy .55s ease-in-out 4; }
+@keyframes fHappy { 0%,100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-14px) scale(1.04); } }
+.fish-wrap[data-mood="happy"] .m-grin { display: block; }
+.fish-wrap[data-mood="happy"] .m-smile { display: none; }
+.fish-wrap[data-mood="happy"] .f-blush { opacity: 1; }
+.fish-wrap[data-mood="happy"] .f-brow { transform: translateY(-4px); transform-origin: 66px 58px; }
+.fish-wrap[data-mood="happy"] .f-sparkle { opacity: 1; animation: fSpark .8s ease-in-out infinite alternate; }
+.fish-wrap[data-mood="happy"] .f-tail { animation-duration: .4s; }
+
+/* ---- 状态：sad（AI 输了）——整体下垂、皱眉、落泪 ---- */
+.fish-wrap[data-mood="sad"] .f-bob { animation: fSad 2.4s ease-in-out infinite; }
+@keyframes fSad { 0%,100% { transform: translateY(2px) rotate(-3deg); } 50% { transform: translateY(5px) rotate(-4deg); } }
+.fish-wrap[data-mood="sad"] .f-tail { animation-duration: 3s; }
+.fish-wrap[data-mood="sad"] .f-fin { animation-duration: 4s; }
+.fish-wrap[data-mood="sad"] .m-frown { display: block; }
+.fish-wrap[data-mood="sad"] .m-smile { display: none; }
+.fish-wrap[data-mood="sad"] .f-brow { transform: rotate(-10deg) translateY(3px); transform-origin: 66px 58px; }
+.fish-wrap[data-mood="sad"] .f-tear { opacity: 1; animation: fTear 1.6s ease-in infinite; }
+@keyframes fTear { 0% { transform: translateY(0); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(26px); opacity: 0; } }
+.fish-wrap[data-mood="sad"] .f-blush { opacity: .2; }
+
+/* ---- 状态：angry（被戳烦了）——眉毛倒竖、皱嘴、连晃 ---- */
+.fish-wrap[data-mood="angry"] .f-brow { transform: rotate(-16deg) translateY(4px); transform-origin: 66px 58px; }
+.fish-wrap[data-mood="angry"] .m-frown { display: block; }
+.fish-wrap[data-mood="angry"] .m-smile { display: none; }
+.fish-wrap[data-mood="angry"] .f-blush { opacity: 1; }
+.fish-wrap[data-mood="angry"] .f-bob { animation: fAngry .18s linear 6; }
+@keyframes fAngry { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-4px); } }
+.fish-wrap[data-mood="angry"] .f-tail { animation-duration: .3s; }
+
+/* ---- 状态：sleep（挂机）——闭眼、慢摆、呼噜 ---- */
+.fish-wrap[data-mood="sleep"] .f-lid { transform: scaleY(1); transform-origin: 66px 66px; }
+.fish-wrap[data-mood="sleep"] .m-smile { display: block; }
+.fish-wrap[data-mood="sleep"] .f-bob { animation-duration: 4.6s; }
+.fish-wrap[data-mood="sleep"] .f-tail { animation-duration: 3.4s; }
+.fish-wrap[data-mood="sleep"] .f-zzz text { opacity: 1; animation: fZzz 2.4s ease-in-out infinite; }
+.fish-wrap[data-mood="sleep"] .z2 { animation-delay: .5s; }
+.fish-wrap[data-mood="sleep"] .z3 { animation-delay: 1s; }
+@keyframes fZzz { 0% { transform: translateY(4px); opacity: 0; } 40% { opacity: 1; } 100% { transform: translateY(-10px); opacity: 0; } }
+
+/* 戳一下：果冻抖动 */
+.fish-wrap.poke .fish-svg { animation: fPoke .5s cubic-bezier(.3,1.6,.4,1); }
+@keyframes fPoke { 0% { transform: scale(1.1, .88); } 55% { transform: scale(.95, 1.06); } 100% { transform: scale(1, 1); } }
+
+/* ---- 6.2 状态行 ---- */
 .status-block { padding: 16px 0 14px; }
 .status-line { display: flex; align-items: center; gap: 10px; }
 .stone-dot { width: 18px; height: 18px; border-radius: 50%; flex: none; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
@@ -152,11 +287,6 @@ canvas {
 @keyframes dots { 0% { content: ""; } 25% { content: "·"; } 50% { content: "··"; } 75% { content: "···"; } }
 #subStatus { margin-top: 5px; font-size: 13px; color: var(--ink-soft); }
 #moveMeta { margin-top: 4px; font-size: 12px; color: var(--ink-faint); }
-.bubble {
-  margin-top: 10px; font-size: 14px; color: var(--seal-deep); min-height: 21px; line-height: 1.6;
-  opacity: 0; transform: translateY(-4px); transition: opacity .3s, transform .3s;
-}
-.bubble.show { opacity: 1; transform: translateY(0); }
 
 .rule { border: none; border-top: 1px solid var(--hairline); margin: 0; }
 section { padding: 16px 0; }

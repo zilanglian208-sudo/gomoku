@@ -24,7 +24,7 @@
   <div class="seal-mark serif">弈</div>
   <h1 class="serif">五子棋</h1>
   <div class="tagline">人机对弈</div>
-  <div class="meta">连珠引擎 v5.1<br>残局 · 复盘 · 自适应棋力</div>
+  <div class="meta">连珠引擎 v6.0<br>对手大肥鱼 · 残局 · 复盘</div>
 </header>
 
 <main>
@@ -51,13 +51,92 @@
     <!-- 标签：对弈 -->
     <div id="tab-match">
       <div class="status-block" id="turnRow">
-        <div class="status-line">
-          <div class="stone-dot black" id="turnDot"></div>
-          <div id="statusText" class="serif">轮到你了</div>
+        <!-- 对手桌宠：大肥鱼（SVG 部件化，表情状态机见 app.js） -->
+        <div class="opponent-row">
+          <div class="fish-wrap" id="fish" data-mood="idle" title="戳它一下试试">
+            <svg class="fish-svg" viewBox="0 0 220 180" aria-label="大肥鱼">
+              <defs>
+                <radialGradient id="fgBody" cx="35%" cy="30%" r="80%">
+                  <stop offset="0%" stop-color="#5ec8f2"/>
+                  <stop offset="55%" stop-color="#3ba3dc"/>
+                  <stop offset="100%" stop-color="#1f7bb5"/>
+                </radialGradient>
+                <linearGradient id="fgBelly" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#eaf7ff"/>
+                  <stop offset="100%" stop-color="#c9e8fa"/>
+                </linearGradient>
+                <linearGradient id="fgFin" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#2f95d0"/>
+                  <stop offset="100%" stop-color="#1a6ba3"/>
+                </linearGradient>
+              </defs>
+              <!-- 地面投影 -->
+              <ellipse class="f-shadow" cx="108" cy="164" rx="64" ry="9"/>
+              <g class="f-bob">
+                <!-- 尾巴（关节在 166,96，摆动动画） -->
+                <g class="f-tail">
+                  <path d="M160 96 Q192 66 206 52 Q198 92 208 128 Q190 118 158 104 Z" fill="url(#fgFin)"/>
+                </g>
+                <!-- 背鳍 -->
+                <path class="f-dorsal" d="M84 48 Q104 14 140 38 Q116 36 98 56 Z" fill="url(#fgFin)"/>
+                <!-- 身体（胖） -->
+                <ellipse cx="102" cy="98" rx="70" ry="54" fill="url(#fgBody)"/>
+                <!-- 肚皮 -->
+                <path d="M42 112 Q102 152 168 106 Q166 130 126 142 Q68 154 42 112 Z" fill="url(#fgBelly)"/>
+                <!-- 高光斑点 -->
+                <ellipse class="f-spot s1" cx="128" cy="58" rx="9" ry="5.5"/>
+                <ellipse class="f-spot s2" cx="146" cy="74" rx="6" ry="4"/>
+                <ellipse class="f-spot s3" cx="112" cy="50" rx="5" ry="3.4"/>
+                <!-- 侧鳍（拍水动画） -->
+                <g class="f-fin">
+                  <path d="M76 118 Q56 136 62 150 Q86 142 94 126 Z" fill="url(#fgFin)"/>
+                </g>
+                <!-- 眉毛（情绪可旋转） -->
+                <path class="f-brow" d="M50 60 Q66 50 82 58"/>
+                <!-- 眼睛 -->
+                <g class="f-eye">
+                  <ellipse class="f-sclera" cx="66" cy="82" rx="13.5" ry="14.5"/>
+                  <g class="f-pupil-g">
+                    <circle class="f-pupil" cx="62" cy="85" r="6.2"/>
+                    <circle class="f-glint" cx="59.6" cy="82" r="2.3"/>
+                    <circle class="f-glint g2" cx="64.6" cy="88" r="1.2"/>
+                  </g>
+                  <rect class="f-lid" x="51" y="65" width="30" height="32" rx="7"/>
+                </g>
+                <!-- 嘴：按情绪显隐 -->
+                <path class="f-mouth m-smile" d="M32 102 Q46 112 60 103"/>
+                <path class="f-mouth m-grin" d="M30 100 Q46 120 62 98 Q46 112 30 100 Z"/>
+                <path class="f-mouth m-open" d="M38 100 Q46 118 55 100 Q46 106 38 100 Z"/>
+                <path class="f-mouth m-flat" d="M36 106 L57 106"/>
+                <path class="f-mouth m-frown" d="M35 111 Q46 102 57 111"/>
+                <!-- 腮红 -->
+                <ellipse class="f-blush" cx="49" cy="99" rx="8.5" ry="4.6"/>
+                <ellipse class="f-blush b2" cx="90" cy="110" rx="8.5" ry="4.6"/>
+                <!-- 效果件：汗滴 / 泪 / 火花 / 呼噜 -->
+                <path class="f-sweat" d="M100 46 q7 11 0 16 q-7 -5 0 -16 Z"/>
+                <circle class="f-tear" cx="64" cy="100" r="4.2"/>
+                <g class="f-sparkle">
+                  <path d="M150 34 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z"/>
+                  <path class="sp2" d="M170 58 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"/>
+                </g>
+                <g class="f-zzz">
+                  <text class="z1" x="96" y="38">z</text>
+                  <text class="z2" x="110" y="26">z</text>
+                  <text class="z3" x="124" y="16">Z</text>
+                </g>
+              </g>
+            </svg>
+            <div class="fish-bubble" id="bubble"></div>
+          </div>
+          <div class="status-col">
+            <div class="status-line">
+              <div class="stone-dot black" id="turnDot"></div>
+              <div id="statusText" class="serif">轮到你了</div>
+            </div>
+            <div id="subStatus">执黑先行，点击交叉点落子</div>
+            <div id="moveMeta">第 0 手 · 00:00</div>
+          </div>
         </div>
-        <div id="subStatus">执黑先行，点击交叉点落子</div>
-        <div id="moveMeta">第 0 手 · 00:00</div>
-        <div class="bubble" id="bubble"></div>
         <!-- 复盘控制条（仅复盘模式显示） -->
         <div class="replay-bar" id="replayBar">
           <button class="rbtn" id="rPrev" title="上一手">◀</button>
@@ -142,7 +221,7 @@
 
 <footer>
   <span>手工作品 · 无框架 · 零运行时依赖 · 数据仅存本机</span>
-  <span class="sig">连珠 v5.1 · build 2026-11-02 · 用心下好每一步棋</span>
+  <span class="sig">连珠 v6.0 · build 2026-11-02 · 用心下好每一步棋</span>
 </footer>
 
 <div id="toasts"></div>
