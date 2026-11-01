@@ -56,7 +56,7 @@
       line: 'rgba(160,90,90,.6)', star: 'rgba(150,80,80,.85)', coord: 'rgba(160,90,90,.7)' },
   ];
 
-  // AI 台词池：按事件分组随机抽取
+  // AI 台词池：按事件分组随机抽取，措辞刻意克制
   const LINES = {
     blockFive:  ['好险，差点让你连成五子。', '就想料到你会走这。', '堵住了，没那么容易。'],
     aiFour:     ['看这一手。', '攻势开始了。', '胜利在望。'],
@@ -165,107 +165,6 @@
   }
 
   /* ================================================================
-   * [4.5] 桌宠大肥鱼 —— 表情状态机 + 待机行为 + 戳一戳
-   * 情绪由 data-mood 驱动 CSS（五通道：眉/嘴/眼睑/特效件/摆尾速度）。
-   * 状态来源：对局事件（思考/被威胁/胜负）+ 玩家互动（戳它）+ 挂机。
-   * ================================================================ */
-  const fish = $('fish');
-  let moodTimer = null, pokeStreak = 0, pokeTimer = null;
-  const POKE_LINES = ['哎哟！', '痒痒痒！', '别戳啦，专心下棋。', '咕噜咕噜……'];
-  const ANGRY_LINES = ['哼！生气了！', '再戳我要咬棋子了！', '你是故意的吧！'];
-
-  function fishMood(mood, ms) {
-    fish.dataset.mood = mood;
-    clearTimeout(moodTimer);
-    if (ms) moodTimer = setTimeout(() => fishMood('idle'), ms);
-  }
-  // 眨眼：3~5 秒随机一次，让鱼一直「活着」
-  (function blinkLoop() {
-    setTimeout(() => {
-      fish.classList.add('blink');
-      setTimeout(() => fish.classList.remove('blink'), 260);
-      blinkLoop();
-    }, 3200 + Math.random() * 1800);
-  })();
-  // 挂机入睡：45 秒无交互就打呼噜；任何交互只重排计时器，
-  // 醒来时若在睡梦则回到 idle（不覆盖其他情绪态）
-  let idleTimer = null;
-  function resetIdle() {
-    clearTimeout(idleTimer);
-    if (fish.dataset.mood === 'sleep') fishMood('idle');
-    idleTimer = setTimeout(() => fishMood('sleep'), 45000);
-  }
-  window.addEventListener('pointerdown', resetIdle, { passive: true });
-  window.addEventListener('keydown', resetIdle);
-  // 瞳孔跟随鼠标（idle 时生效；情绪态由 CSS 覆盖）
-  let pupilRaf = 0, pupilXY = null;
-  window.addEventListener('mousemove', e => {
-    pupilXY = e;
-    if (!pupilRaf) pupilRaf = requestAnimationFrame(updatePupils);
-  }, { passive: true });
-  function updatePupils() {
-    pupilRaf = 0;
-    const r = fish.getBoundingClientRect();
-    if (!r.width || !pupilXY) return;
-    const dx = Math.max(-1, Math.min(1, (pupilXY.clientX - (r.left + r.width * .3)) / 320));
-    const dy = Math.max(-1, Math.min(1, (pupilXY.clientY - (r.top + r.height * .48)) / 320));
-    fish.style.setProperty('--px', (dx * 3).toFixed(1) + 'px');
-    fish.style.setProperty('--py', (dy * 3).toFixed(1) + 'px');
-  }
-  function sndSqueak() {
-    if (!sndReady()) return;
-    tone(620, .07, 'triangle', .18, 0, 940);
-    tone(940, .09, 'sine', .14, .05, 620);
-  }
-  // 戳一戳：连续 3 次 → 生气
-  const petEl = $('pet');
-  let drag = null;
-  // 桌宠拖拽：pointer 拖动 + 位置持久化；移动超过 6px 视为拖拽，松手不触发戳
-  fish.addEventListener('pointerdown', e => {
-    const r = petEl.getBoundingClientRect();
-    drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, moved: false, sx: e.clientX, sy: e.clientY };
-    fish.setPointerCapture(e.pointerId);
-    petEl.classList.add('dragging');
-  });
-  fish.addEventListener('pointermove', e => {
-    if (!drag) return;
-    if (Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) > 6) drag.moved = true;
-    if (!drag.moved) return;
-    const x = Math.max(2, Math.min(innerWidth - petEl.offsetWidth - 2, e.clientX - drag.dx));
-    const y = Math.max(2, Math.min(innerHeight - petEl.offsetHeight - 2, e.clientY - drag.dy));
-    petEl.style.left = x + 'px'; petEl.style.top = y + 'px';
-    petEl.style.bottom = 'auto';
-  });
-  fish.addEventListener('pointerup', () => {
-    if (!drag) return;
-    petEl.classList.remove('dragging');
-    if (drag.moved) {
-      store.set('wuziqi-pet-pos', { x: parseFloat(petEl.style.left) || 0, y: parseFloat(petEl.style.top) || 0 });
-      fish.dataset.dragged = '1';                      // 告诉 click：这是拖拽不是戳
-      setTimeout(() => { delete fish.dataset.dragged; }, 250);
-    }
-    drag = null;
-  });
-  fish.addEventListener('click', () => {
-    if (fish.dataset.dragged) return;                  // 拖拽结束的 click 不算戳
-    pokeStreak++;
-    clearTimeout(pokeTimer);
-    fish.classList.remove('poke'); void fish.offsetWidth;
-    fish.classList.add('poke');
-    sndSqueak(); haptic(20);
-    if (pokeStreak >= 3) {
-      fishMood('angry', 1600);
-      aiSay(pick(ANGRY_LINES));
-      pokeStreak = 0;
-    } else {
-      fishMood('surprised', 700);
-      aiSay(pick(POKE_LINES));
-      pokeTimer = setTimeout(() => { pokeStreak = 0; }, 4000);
-    }
-    resetIdle();
-  });
-
-  /* ================================================================
    * [5] 对局流程
    * ================================================================ */
   let board, history, turn, playing, aiThinking, winCells, gameToken = 0;
@@ -297,7 +196,6 @@
     resultSub.textContent = '';
     $('againBtn').textContent = '再来一局';
     bubble.classList.remove('show');
-    fishMood('idle');
     hideReplayBar();
     gameStart = Date.now();
     clearInterval(timerIv); timerIv = setInterval(tick, 500); tick();
@@ -334,9 +232,6 @@
     if (board[G.idx(x, y)] !== G.EMPTY) return;
     hintCell = null;
     doMove(x, y, playerColor);
-    // 玩家下出活四 → 小肥鱼吓一跳
-    const pa = G.analyzePoint(board, x, y, playerColor);
-    if (playing && pa.liveFour) fishMood('surprised', 1500);
     if (playing && turn === aiColor) scheduleAI();
   }
 
@@ -345,7 +240,6 @@
     if (mode !== 'match') return;
     const token = gameToken;
     aiThinking = true; updatePanel(); render();
-    fishMood('thinking');                          // 小肥鱼进入思考
     setTimeout(function () {
       const t0 = performance.now();
       const level = $('difficulty').value;
@@ -357,14 +251,13 @@
       if (token !== gameToken) return;
       aiThinking = false;
       if (!playing) { updatePanel(); return; }
-      // 台词 + 鱼表情触发：分别分析「我方落此点」「对方落此点」的棋型价值
+      // 台词触发：分别分析「我方落此点」「对方落此点」的棋型价值
       const a = G.analyzePoint(board, mv.x, mv.y, aiColor);
       const d = G.analyzePoint(board, mv.x, mv.y, playerColor);
-      if (d.five) { aiSay(pick(LINES.blockFive)); fishMood('surprised', 1600); }
-      else if (a.liveFour || a.score >= 60000) { aiSay(pick(LINES.aiFour)); fishMood('smug', 2200); }
-      else if (d.liveFour) { aiSay(pick(LINES.playerFour)); fishMood('surprised', 1600); }
-      else if (a.score >= 50000) { aiSay(pick(LINES.aiThree)); fishMood('smug', 1600); }
-      else fishMood('idle');
+      if (d.five) aiSay(pick(LINES.blockFive));
+      else if (a.liveFour || a.score >= 60000) aiSay(pick(LINES.aiFour));
+      else if (d.liveFour) aiSay(pick(LINES.playerFour));
+      else if (a.score >= 50000) aiSay(pick(LINES.aiThree));
       doMove(mv.x, mv.y, aiColor);
     }, 160);
   }
@@ -412,10 +305,6 @@
     resultSub.textContent = sub + ' · ' + pick(FLAVOR[key]);
     if (key === 'draw') sndDraw(); else if (key === 'aiLose') sndWin(); else sndLose();
     aiSay(pick(LINES[key]));
-    // 小肥鱼的情绪收尾：AI 赢→大笑，AI 输→落泪，和棋→平静
-    if (winnerRole === playerColor) fishMood('sad', 3200);
-    else if (winnerRole === aiColor) fishMood('happy', 2600);
-    else fishMood('idle');
     recordResult(winnerRole);
     persist();
     setTimeout(function () { overlay.classList.add('show'); ensureLoop(); }, 500);
@@ -981,15 +870,6 @@
   /* ================================================================
    * [10] 开场画面与启动序列
    * ================================================================ */
-  // 桌宠位置恢复：读档并夹在视口内
-  (function restorePetPos() {
-    const pos = store.get('wuziqi-pet-pos', null);
-    const petEl = $('pet');
-    if (!pos) return;
-    petEl.style.left = Math.min(Math.max(2, pos.x), Math.max(2, innerWidth - 150)) + 'px';
-    petEl.style.top = Math.min(Math.max(2, pos.y), Math.max(2, innerHeight - 200)) + 'px';
-    petEl.style.bottom = 'auto';
-  })();
   // 开场画面：注入漂浮棋子装饰，点击/空格开始
   (function buildIntro() {
     const intro = $('intro');

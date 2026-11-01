@@ -24,7 +24,7 @@
   <div class="seal-mark serif">弈</div>
   <h1 class="serif">五子棋</h1>
   <div class="tagline">人机对弈</div>
-  <div class="meta">连珠引擎 v6.0<br>对手大肥鱼 · 残局 · 复盘</div>
+  <div class="meta">连珠引擎 v5.1<br>残局 · 复盘 · 自适应棋力</div>
 </header>
 
 <main>
@@ -51,13 +51,13 @@
     <!-- 标签：对弈 -->
     <div id="tab-match">
       <div class="status-block" id="turnRow">
-        <!-- 对手桌宠：大肥鱼（SVG 部件化，表情状态机见 app.js） -->
         <div class="status-line">
           <div class="stone-dot black" id="turnDot"></div>
           <div id="statusText" class="serif">轮到你了</div>
         </div>
         <div id="subStatus">执黑先行，点击交叉点落子</div>
         <div id="moveMeta">第 0 手 · 00:00</div>
+        <div class="bubble" id="bubble"></div>
         <!-- 复盘控制条（仅复盘模式显示） -->
         <div class="replay-bar" id="replayBar">
           <button class="rbtn" id="rPrev" title="上一手">◀</button>
@@ -142,18 +142,10 @@
 
 <footer>
   <span>手工作品 · 无框架 · 零运行时依赖 · 数据仅存本机</span>
-  <span class="sig">连珠 v6.0 · build 2026-11-02 · 用心下好每一步棋</span>
+  <span class="sig">连珠 v5.1 · build 2026-11-02 · 用心下好每一步棋</span>
 </footer>
 
 <div id="toasts"></div>
-
-<!-- 桌宠：大肥鱼小人（可拖拽；表情状态机见 app.js；数据含位置持久化） -->
-<div class="pet" id="pet" data-mood="idle">
-  <div class="fish-bubble" id="bubble"></div>
-  <div class="pet-body" id="fish" title="拖着我走 · 点点我">
-    <canvas id="petCanvas" width="180" height="230"></canvas>
-  </div>
-</div>
 
 <div id="intro">
   <div class="i-seal serif">弈</div>
@@ -170,8 +162,6 @@
 
 <script src="game.js"></script>
 <script src="puzzles.js"></script>
-<script src="js/lib/three.min.js"></script>
-<script src="js/pet3d.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
