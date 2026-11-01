@@ -56,40 +56,40 @@
           <div class="fish-wrap" id="fish" data-mood="idle" title="戳它一下试试">
             <svg class="fish-svg" viewBox="0 0 220 180" aria-label="大肥鱼">
               <defs>
-                <radialGradient id="fgBody" cx="35%" cy="30%" r="80%">
-                  <stop offset="0%" stop-color="#5ec8f2"/>
-                  <stop offset="55%" stop-color="#3ba3dc"/>
-                  <stop offset="100%" stop-color="#1f7bb5"/>
+                <!-- DeepSeek 蓝渐变 -->
+                <radialGradient id="fgBody" cx="38%" cy="28%" r="85%">
+                  <stop offset="0%" stop-color="#9db9ff"/>
+                  <stop offset="50%" stop-color="#5a8df0"/>
+                  <stop offset="100%" stop-color="#3a67d6"/>
                 </radialGradient>
                 <linearGradient id="fgBelly" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#eaf7ff"/>
-                  <stop offset="100%" stop-color="#c9e8fa"/>
+                  <stop offset="0%" stop-color="#f4f9ff"/>
+                  <stop offset="100%" stop-color="#d8e8ff"/>
                 </linearGradient>
                 <linearGradient id="fgFin" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#2f95d0"/>
-                  <stop offset="100%" stop-color="#1a6ba3"/>
+                  <stop offset="0%" stop-color="#4a7fe8"/>
+                  <stop offset="100%" stop-color="#2f5fc0"/>
                 </linearGradient>
+                <clipPath id="fgClip"><use href="#fgBodyPath"/></clipPath>
               </defs>
               <!-- 地面投影 -->
-              <ellipse class="f-shadow" cx="108" cy="164" rx="64" ry="9"/>
+              <ellipse class="f-shadow" cx="104" cy="162" rx="66" ry="9"/>
               <g class="f-bob">
-                <!-- 尾巴（关节在 166,96，摆动动画） -->
+                <!-- 鲸尾双叶（关节 164,96，摆动动画） -->
                 <g class="f-tail">
-                  <path d="M160 96 Q192 66 206 52 Q198 92 208 128 Q190 118 158 104 Z" fill="url(#fgFin)"/>
+                  <path d="M164 92 C178 74 192 62 208 54 C202 72 202 84 208 94 C194 100 178 102 164 100 C178 108 192 120 198 136 C182 130 168 118 160 102 Z" fill="url(#fgFin)"/>
                 </g>
-                <!-- 背鳍 -->
-                <path class="f-dorsal" d="M84 48 Q104 14 140 38 Q116 36 98 56 Z" fill="url(#fgFin)"/>
-                <!-- 身体（胖） -->
-                <ellipse cx="102" cy="98" rx="70" ry="54" fill="url(#fgBody)"/>
-                <!-- 肚皮 -->
-                <path d="M42 112 Q102 152 168 106 Q166 130 126 142 Q68 154 42 112 Z" fill="url(#fgBelly)"/>
+                <!-- 圆滚滚的鲸身 -->
+                <path id="fgBodyPath" d="M36 96 C36 62 62 44 96 44 C136 44 160 62 168 88 C172 96 172 104 166 110 C152 138 120 152 88 150 C56 148 36 124 36 96 Z" fill="url(#fgBody)"/>
+                <!-- 白肚皮（裁剪进身体轮廓） -->
+                <ellipse cx="98" cy="136" rx="62" ry="34" fill="url(#fgBelly)" clip-path="url(#fgClip)"/>
                 <!-- 高光斑点 -->
-                <ellipse class="f-spot s1" cx="128" cy="58" rx="9" ry="5.5"/>
-                <ellipse class="f-spot s2" cx="146" cy="74" rx="6" ry="4"/>
-                <ellipse class="f-spot s3" cx="112" cy="50" rx="5" ry="3.4"/>
-                <!-- 侧鳍（拍水动画） -->
+                <ellipse class="f-spot s1" cx="128" cy="60" rx="9" ry="5.5"/>
+                <ellipse class="f-spot s2" cx="146" cy="76" rx="6" ry="4"/>
+                <ellipse class="f-spot s3" cx="112" cy="52" rx="5" ry="3.4"/>
+                <!-- 小手手（胸鳍，拍水动画） -->
                 <g class="f-fin">
-                  <path d="M76 118 Q56 136 62 150 Q86 142 94 126 Z" fill="url(#fgFin)"/>
+                  <path d="M70 112 C58 122 56 136 64 142 C76 138 84 126 84 116 C80 112 74 110 70 112 Z" fill="url(#fgFin)"/>
                 </g>
                 <!-- 眉毛（情绪可旋转） -->
                 <path class="f-brow" d="M50 60 Q66 50 82 58"/>
@@ -111,13 +111,13 @@
                 <path class="f-mouth m-frown" d="M35 111 Q46 102 57 111"/>
                 <!-- 腮红 -->
                 <ellipse class="f-blush" cx="49" cy="99" rx="8.5" ry="4.6"/>
-                <ellipse class="f-blush b2" cx="90" cy="110" rx="8.5" ry="4.6"/>
+                <ellipse class="f-blush b2" cx="88" cy="110" rx="8.5" ry="4.6"/>
                 <!-- 效果件：汗滴 / 泪 / 火花 / 呼噜 -->
-                <path class="f-sweat" d="M100 46 q7 11 0 16 q-7 -5 0 -16 Z"/>
+                <path class="f-sweat" d="M100 40 q7 11 0 16 q-7 -5 0 -16 Z"/>
                 <circle class="f-tear" cx="64" cy="100" r="4.2"/>
                 <g class="f-sparkle">
-                  <path d="M150 34 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z"/>
-                  <path class="sp2" d="M170 58 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"/>
+                  <path d="M150 30 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z"/>
+                  <path class="sp2" d="M170 54 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"/>
                 </g>
                 <g class="f-zzz">
                   <text class="z1" x="96" y="38">z</text>

@@ -174,8 +174,8 @@ canvas {
 .f-bob { animation: fBob 3.2s ease-in-out infinite; transform-origin: 100px 96px; }
 @keyframes fBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-/* 尾巴：idle 慢摆 */
-.f-tail { transform-origin: 166px 96px; animation: fTail 1.6s ease-in-out infinite alternate; }
+/* 尾巴：idle 慢摆（鲸尾双叶，关节在 164,96） */
+.f-tail { transform-origin: 164px 96px; animation: fTail 1.6s ease-in-out infinite alternate; }
 @keyframes fTail { from { transform: rotate(10deg); } to { transform: rotate(-14deg); } }
 /* 侧鳍拍水 */
 .f-fin { transform-origin: 84px 122px; animation: fFin 2.4s ease-in-out infinite alternate; }
