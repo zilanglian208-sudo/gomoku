@@ -54,84 +54,104 @@
         <!-- 对手桌宠：大肥鱼（SVG 部件化，表情状态机见 app.js） -->
         <div class="opponent-row">
           <div class="fish-wrap" id="fish" data-mood="idle" title="戳它一下试试">
-            <svg class="fish-svg" viewBox="0 0 220 180" aria-label="大肥鱼">
+            <svg class="fish-svg" viewBox="0 0 220 180" aria-label="大肥鱼（鲸鱼娘）">
               <defs>
-                <!-- DeepSeek 蓝渐变 -->
-                <radialGradient id="fgBody" cx="38%" cy="28%" r="85%">
-                  <stop offset="0%" stop-color="#9db9ff"/>
-                  <stop offset="50%" stop-color="#5a8df0"/>
-                  <stop offset="100%" stop-color="#3a67d6"/>
-                </radialGradient>
-                <linearGradient id="fgBelly" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#f4f9ff"/>
-                  <stop offset="100%" stop-color="#d8e8ff"/>
+                <!-- DeepSeek 蓝渐变：发色/尾巴/饰件共用 -->
+                <linearGradient id="fgHair" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#a8c2ff"/>
+                  <stop offset="55%" stop-color="#6b96f5"/>
+                  <stop offset="100%" stop-color="#4a72d8"/>
+                </linearGradient>
+                <linearGradient id="fgDress" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#2c4a80"/>
+                  <stop offset="100%" stop-color="#223c6e"/>
                 </linearGradient>
                 <linearGradient id="fgFin" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stop-color="#4a7fe8"/>
                   <stop offset="100%" stop-color="#2f5fc0"/>
                 </linearGradient>
-                <clipPath id="fgClip"><use href="#fgBodyPath"/></clipPath>
               </defs>
               <!-- 地面投影 -->
-              <ellipse class="f-shadow" cx="104" cy="162" rx="66" ry="9"/>
+              <ellipse class="f-shadow" cx="102" cy="170" rx="56" ry="8"/>
               <g class="f-bob">
-                <!-- 鲸尾双叶（关节 164,96，摆动动画） -->
+                <!-- 大鲸尾（Q 版圆尾，身后） -->
                 <g class="f-tail">
-                  <path d="M164 92 C178 74 192 62 208 54 C202 72 202 84 208 94 C194 100 178 102 164 100 C178 108 192 120 198 136 C182 130 168 118 160 102 Z" fill="url(#fgFin)"/>
+                  <path d="M126 146 C146 136 166 128 182 122 C190 134 188 150 176 158 C160 162 140 156 126 146 Z" fill="url(#fgHair)"/>
                 </g>
-                <!-- 圆滚滚的鲸身 -->
-                <path id="fgBodyPath" d="M36 96 C36 62 62 44 96 44 C136 44 160 62 168 88 C172 96 172 104 166 110 C152 138 120 152 88 150 C56 148 36 124 36 96 Z" fill="url(#fgBody)"/>
-                <!-- 白肚皮（裁剪进身体轮廓） -->
-                <ellipse cx="98" cy="136" rx="62" ry="34" fill="url(#fgBelly)" clip-path="url(#fgClip)"/>
-                <!-- 高光斑点 -->
-                <ellipse class="f-spot s1" cx="128" cy="60" rx="9" ry="5.5"/>
-                <ellipse class="f-spot s2" cx="146" cy="76" rx="6" ry="4"/>
-                <ellipse class="f-spot s3" cx="112" cy="52" rx="5" ry="3.4"/>
-                <!-- 标志性道具：一碗冒尖的白米饭（二创设定：爱吃白饭） -->
+                <!-- 蓝色长发（脑后） -->
+                <path class="f-hairback" d="M148 56 C166 76 164 116 158 144 C154 162 138 168 130 156 C138 128 142 96 136 74 Z" fill="url(#fgHair)"/>
+                <!-- 女仆裙（深蓝） -->
+                <path class="f-dress" d="M84 116 C84 110 116 110 116 116 L124 160 C112 168 88 168 76 160 Z" fill="url(#fgDress)"/>
+                <!-- 白围裙 -->
+                <path class="f-apron" d="M88 126 L112 126 L118 156 C104 162 96 162 82 156 Z"/>
+                <path class="f-apron" d="M85 121 L115 121 L115 128 L85 128 Z"/>
+                <!-- 小手手：右手端饭碗 -->
+                <circle class="f-hand" cx="120" cy="130" r="6"/>
                 <g class="f-bowl">
-                  <ellipse cx="76" cy="112" rx="4.5" ry="6" fill="url(#fgFin)" transform="rotate(24 76 112)"/>
-                  <path class="b-rice" d="M56 124 Q58 112 70 110 Q82 108 90 118 Q92 122 90 126 Q72 120 56 124 Z"/>
-                  <path class="b-ceramic" d="M52 126 Q56 146 72 148 Q88 146 92 126 Q72 132 52 126 Z"/>
-                  <circle class="b-grain g1" cx="66" cy="114" r="2"/>
-                  <circle class="b-grain g2" cx="76" cy="112" r="2"/>
-                  <circle class="b-grain g3" cx="84" cy="116" r="2"/>
+                  <path class="b-rice" d="M120 138 Q122 128 132 127 Q142 128 144 137 Q136 133 120 138 Z"/>
+                  <path class="b-ceramic" d="M118 138 Q121 152 132 153 Q143 152 146 138 Q132 143 118 138 Z"/>
+                  <circle class="b-grain g1" cx="128" cy="131" r="1.8"/>
+                  <circle class="b-grain g2" cx="135" cy="132" r="1.8"/>
                 </g>
-                <!-- 小手手（胸鳍，拍水动画） -->
-                <g class="f-fin">
-                  <path d="M70 112 C58 122 56 136 64 142 C76 138 84 126 84 116 C80 112 74 110 70 112 Z" fill="url(#fgFin)"/>
-                </g>
+                <circle class="f-hand" cx="132" cy="147" r="4.5"/>
+                <!-- 左手手 -->
+                <circle class="f-hand" cx="79" cy="132" r="5.5"/>
+                <!-- 小脚脚 -->
+                <ellipse class="f-foot" cx="93" cy="168" rx="7" ry="3.6"/>
+                <ellipse class="f-foot" cx="109" cy="168" rx="7" ry="3.6"/>
+                <!-- 脸 -->
+                <circle class="f-face" cx="100" cy="78" r="42"/>
+                <!-- 鲸鳍耳（头两侧） -->
+                <path class="f-earfin" d="M56 80 C42 74 30 80 26 92 C38 96 52 94 58 86 Z" fill="url(#fgFin)"/>
+                <path class="f-earfin" d="M144 80 C158 74 170 80 174 92 C162 96 148 94 142 86 Z" fill="url(#fgFin)"/>
+                <!-- 蓝长发刘海 -->
+                <path class="f-bangs" d="M56 80 C52 48 74 36 100 36 C126 36 148 48 144 80 C138 60 128 52 118 58 C112 44 104 42 100 42 C96 42 88 44 82 58 C72 52 62 60 56 80 Z" fill="url(#fgHair)"/>
+                <!-- 呆毛（背鳍形） -->
+                <path class="f-ahoge" d="M96 36 C94 22 102 14 116 12 C106 22 104 30 104 38 Z" fill="url(#fgFin)"/>
+                <!-- 白色女仆发箍 -->
+                <path class="f-band" d="M60 46 C80 26 120 26 140 46 C136 38 120 32 100 32 C80 32 64 38 60 46 Z"/>
                 <!-- 眉毛（情绪可旋转） -->
-                <path class="f-brow" d="M50 60 Q66 50 82 58"/>
-                <!-- 眼睛 -->
+                <path class="f-brow" d="M70 80 Q80 75 90 80"/>
+                <path class="f-brow" d="M110 80 Q120 75 130 80"/>
+                <!-- 眼睛（蓝瞳） -->
                 <g class="f-eye">
-                  <ellipse class="f-sclera" cx="66" cy="82" rx="13.5" ry="14.5"/>
+                  <ellipse class="f-sclera" cx="80" cy="92" rx="10" ry="11"/>
                   <g class="f-pupil-g">
-                    <circle class="f-pupil" cx="62" cy="85" r="6.2"/>
-                    <circle class="f-glint" cx="59.6" cy="82" r="2.3"/>
-                    <circle class="f-glint g2" cx="64.6" cy="88" r="1.2"/>
+                    <circle class="f-pupil" cx="78" cy="94" r="5"/>
+                    <circle class="f-glint" cx="75.8" cy="91.6" r="1.8"/>
+                    <circle class="f-glint g2" cx="80.6" cy="97" r="1"/>
                   </g>
-                  <rect class="f-lid" x="51" y="65" width="30" height="32" rx="7"/>
+                  <rect class="f-lid" x="69" y="80" width="22" height="24" rx="5"/>
+                </g>
+                <g class="f-eye">
+                  <ellipse class="f-sclera" cx="120" cy="92" rx="10" ry="11"/>
+                  <g class="f-pupil-g">
+                    <circle class="f-pupil" cx="118" cy="94" r="5"/>
+                    <circle class="f-glint" cx="115.8" cy="91.6" r="1.8"/>
+                    <circle class="f-glint g2" cx="120.6" cy="97" r="1"/>
+                  </g>
+                  <rect class="f-lid" x="109" y="80" width="22" height="24" rx="5"/>
                 </g>
                 <!-- 嘴：按情绪显隐 -->
-                <path class="f-mouth m-smile" d="M32 102 Q46 112 60 103"/>
-                <path class="f-mouth m-grin" d="M30 100 Q46 120 62 98 Q46 112 30 100 Z"/>
-                <path class="f-mouth m-open" d="M38 100 Q46 118 55 100 Q46 106 38 100 Z"/>
-                <path class="f-mouth m-flat" d="M36 106 L57 106"/>
-                <path class="f-mouth m-frown" d="M35 111 Q46 102 57 111"/>
+                <path class="f-mouth m-smile" d="M93 111 Q100 117 107 111"/>
+                <path class="f-mouth m-grin" d="M91 110 Q100 122 109 108 Q100 116 91 110 Z"/>
+                <path class="f-mouth m-open" d="M96 110 Q100 121 104 110 Q100 114 96 110 Z"/>
+                <path class="f-mouth m-flat" d="M94 113 L106 113"/>
+                <path class="f-mouth m-frown" d="M93 115 Q100 108 107 115"/>
                 <!-- 腮红 -->
-                <ellipse class="f-blush" cx="49" cy="99" rx="8.5" ry="4.6"/>
-                <ellipse class="f-blush b2" cx="88" cy="110" rx="8.5" ry="4.6"/>
+                <ellipse class="f-blush" cx="71" cy="103" rx="7" ry="3.8"/>
+                <ellipse class="f-blush b2" cx="129" cy="103" rx="7" ry="3.8"/>
                 <!-- 效果件：汗滴 / 泪 / 火花 / 呼噜 -->
-                <path class="f-sweat" d="M100 40 q7 11 0 16 q-7 -5 0 -16 Z"/>
-                <circle class="f-tear" cx="64" cy="100" r="4.2"/>
+                <path class="f-sweat" d="M142 48 q7 11 0 16 q-7 -5 0 -16 Z"/>
+                <circle class="f-tear" cx="78" cy="102" r="3.8"/>
                 <g class="f-sparkle">
-                  <path d="M150 30 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z"/>
-                  <path class="sp2" d="M170 54 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"/>
+                  <path d="M158 34 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z"/>
+                  <path class="sp2" d="M176 58 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"/>
                 </g>
                 <g class="f-zzz">
-                  <text class="z1" x="96" y="38">z</text>
-                  <text class="z2" x="110" y="26">z</text>
-                  <text class="z3" x="124" y="16">Z</text>
+                  <text class="z1" x="140" y="40">z</text>
+                  <text class="z2" x="154" y="28">z</text>
+                  <text class="z3" x="168" y="18">Z</text>
                 </g>
               </g>
             </svg>
