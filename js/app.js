@@ -218,7 +218,36 @@
     tone(940, .09, 'sine', .14, .05, 620);
   }
   // 戳一戳：连续 3 次 → 生气
+  const petEl = $('pet');
+  let drag = null;
+  // 桌宠拖拽：pointer 拖动 + 位置持久化；移动超过 6px 视为拖拽，松手不触发戳
+  fish.addEventListener('pointerdown', e => {
+    const r = petEl.getBoundingClientRect();
+    drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, moved: false, sx: e.clientX, sy: e.clientY };
+    fish.setPointerCapture(e.pointerId);
+    petEl.classList.add('dragging');
+  });
+  fish.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) > 6) drag.moved = true;
+    if (!drag.moved) return;
+    const x = Math.max(2, Math.min(innerWidth - petEl.offsetWidth - 2, e.clientX - drag.dx));
+    const y = Math.max(2, Math.min(innerHeight - petEl.offsetHeight - 2, e.clientY - drag.dy));
+    petEl.style.left = x + 'px'; petEl.style.top = y + 'px';
+    petEl.style.bottom = 'auto';
+  });
+  fish.addEventListener('pointerup', () => {
+    if (!drag) return;
+    petEl.classList.remove('dragging');
+    if (drag.moved) {
+      store.set('wuziqi-pet-pos', { x: parseFloat(petEl.style.left) || 0, y: parseFloat(petEl.style.top) || 0 });
+      fish.dataset.dragged = '1';                      // 告诉 click：这是拖拽不是戳
+      setTimeout(() => { delete fish.dataset.dragged; }, 250);
+    }
+    drag = null;
+  });
   fish.addEventListener('click', () => {
+    if (fish.dataset.dragged) return;                  // 拖拽结束的 click 不算戳
     pokeStreak++;
     clearTimeout(pokeTimer);
     fish.classList.remove('poke'); void fish.offsetWidth;
@@ -952,6 +981,15 @@
   /* ================================================================
    * [10] 开场画面与启动序列
    * ================================================================ */
+  // 桌宠位置恢复：读档并夹在视口内
+  (function restorePetPos() {
+    const pos = store.get('wuziqi-pet-pos', null);
+    const petEl = $('pet');
+    if (!pos) return;
+    petEl.style.left = Math.min(Math.max(2, pos.x), Math.max(2, innerWidth - 150)) + 'px';
+    petEl.style.top = Math.min(Math.max(2, pos.y), Math.max(2, innerHeight - 200)) + 'px';
+    petEl.style.bottom = 'auto';
+  })();
   // 开场画面：注入漂浮棋子装饰，点击/空格开始
   (function buildIntro() {
     const intro = $('intro');
